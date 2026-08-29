@@ -59,6 +59,32 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-navy-foreground: var(--navy-foreground);
+  --color-accent-teal: var(--accent-teal);
+  --color-accent-teal-strong: var(--accent-teal-strong);
+  --color-accent-teal-foreground: var(--accent-teal-foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-hairline: var(--hairline);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@utility eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-teal);
+}
+
+@utility rule-grid {
+  background-image: repeating-linear-gradient(
+    115deg,
+    color-mix(in oklab, var(--navy) 7%, transparent) 0 1px,
+    transparent 1px 84px
+  );
 }
 
 :root {
