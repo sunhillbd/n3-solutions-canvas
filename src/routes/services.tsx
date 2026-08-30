@@ -38,7 +38,36 @@ const SERVICES = [
     icon: Gauge,
     slug: "smart-water-metering",
     title: "Smart Water Metering",
-...
+    body: "End-to-end metering programmes — procurement, installation, commissioning and billing-grade consumption data delivered as a managed service.",
+    points: [
+      "AMI/AMR metering deployment at city scale",
+      "Consumption analytics and loss detection",
+      "Billing-system integration and data assurance",
+    ],
+  },
+  {
+    icon: RadioTower,
+    slug: "iot-infrastructure",
+    title: "IoT Infrastructure",
+    body: "Low-power wide-area networks, gateways and telemetry platforms engineered for utility-grade reliability and multi-decade service life.",
+    points: [
+      "LPWAN network design and rollout",
+      "Gateway and sensor estate management",
+      "Telemetry platforms with 24/7 monitoring",
+    ],
+  },
+  {
+    icon: Wrench,
+    slug: "field-operations",
+    title: "Field Operations & Maintenance",
+    body: "Deployed regional teams, asset lifecycle management and service levels held to measurable, contractual uptime targets.",
+    points: [
+      "Regional field engineering teams",
+      "Preventive and corrective maintenance",
+      "SLA-backed response and reporting",
+    ],
+  },
+  {
     icon: CircuitBoard,
     slug: "emerging-technologies",
     title: "Emerging Technologies",
