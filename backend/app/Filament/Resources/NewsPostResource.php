@@ -21,7 +21,9 @@ class NewsPostResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-newspaper';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Site Content';
+    protected static string | UnitEnum | null $navigationGroup = 'Content Management';
+
+    protected static ?string $navigationLabel = 'News & Articles';
 
     protected static ?int $navigationSort = 5;
 
@@ -62,7 +64,7 @@ class NewsPostResource extends Resource
                             ->columnSpanFull(),
                         Components\FileUpload::make('featured_image')
                             ->label('Featured Article Image')
-                            ->image()
+                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
                             ->disk('public')
                             ->directory('news')
                             ->visibility('public')

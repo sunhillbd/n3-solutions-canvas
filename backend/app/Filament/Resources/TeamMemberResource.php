@@ -21,7 +21,9 @@ class TeamMemberResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-user-group';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Site Content';
+    protected static string | UnitEnum | null $navigationGroup = 'Content Management';
+
+    protected static ?string $navigationLabel = 'Leadership & Team';
 
     protected static ?int $navigationSort = 3;
 
@@ -57,7 +59,7 @@ class TeamMemberResource extends Resource
                             ->maxLength(5),
                         Components\FileUpload::make('photo')
                             ->label('Profile Photo')
-                            ->image()
+                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
                             ->disk('public')
                             ->directory('team')
                             ->visibility('public')

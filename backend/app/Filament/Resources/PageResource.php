@@ -25,15 +25,20 @@ class PageResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-document-duplicate';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Site Content';
+    protected static string | UnitEnum | null $navigationGroup = 'Content Management';
+
+    protected static ?string $navigationLabel = 'Pages & Layouts';
 
     protected static ?int $navigationSort = 1;
+
+    protected static ?string $recordTitleAttribute = 'title';
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 Tabs::make('Page Sections Management')
+                    ->extraAttributes(['class' => 'vertical-section-tabs'])
                     ->tabs([
                         // 1. GENERAL IDENTITY & TEMPLATE
                         Tabs\Tab::make('General')
@@ -133,6 +138,87 @@ class PageResource extends Resource
                                                 Components\Textarea::make('fact_answer')->label('Factual Direct Answer')->rows(2)->required(),
                                             ])->columns(2)->collapsible(),
                                     ])->columns(1),
+                            ]),
+
+                        // 2. SECTION SEQUENCE & DRAG-AND-DROP ORDER
+                        Tabs\Tab::make('Section Order & Layout')
+                            ->icon('heroicon-o-arrows-up-down')
+                            ->schema([
+                                Section::make('Page Section Sequence & Drag-and-Drop Reordering')
+                                    ->description('Drag sections up or down to rearrange their visual display order on the live website. Use the toggle switch to show or hide any section.')
+                                    ->schema([
+                                        Components\Repeater::make('content.sections_order')
+                                            ->label('Page Sections Sequence (Drag items to reorder)')
+                                            ->schema([
+                                                Components\Select::make('key')
+                                                    ->label('Section Name & Type')
+                                                    ->options([
+                                                        'hero' => '🚀 Hero Banner & Visualizer',
+                                                        'stats_bar' => '📊 Key Performance & Stats Bar',
+                                                        'capabilities' => '⚙️ Four Disciplines / Capabilities Grid',
+                                                        'about_teaser' => '📖 National Upgrade / About Story Teaser',
+                                                        'team_teaser' => '👥 Leadership & Founding Partners Teaser',
+                                                        'newsroom' => '📰 Technical Press Releases & Newsroom',
+                                                        'modular_blocks' => '🧩 Custom Modular Dynamic Blocks Canvas',
+                                                        'faqs' => '❓ Frequently Asked Questions Accordion',
+                                                        'cta' => '🎯 Bottom Call To Action (CTA) Banner',
+                                                        'who_we_are' => '🏛️ Identity & Operating Focus (Who We Are)',
+                                                        'principles' => '💎 Core Operating Principles Cards',
+                                                        'timeline' => '⏱️ Company Trajectory & Milestones Timeline',
+                                                        'mission_vision_boxes' => '🎯 Mission & Vision Strategic Intent Twin Boxes',
+                                                        'values_grid' => '⚖️ Governing Operating Principles Grid (Values)',
+                                                        'executives' => '👔 Executive Leadership / Founding Partners',
+                                                        'functional_leads' => '🔬 Functional Engineering Discipline Leads',
+                                                        'featured_logo_strip' => '🛡️ Featured Partners Logo Strip',
+                                                        'ecosystem_grid' => '🌐 Four-Tier Ecosystem Directory',
+                                                        'engagement_models' => '🤝 Institutional Engagement Models',
+                                                        'contact_details_and_form' => '📬 Office Directory & Inbound Inquiry Form',
+                                                    ])
+                                                    ->required()
+                                                    ->columnSpan(2),
+                                                Components\Toggle::make('is_enabled')
+                                                    ->label('On the page')
+                                                    ->default(true)
+                                                    ->inline(false)
+                                                    ->columnSpan(1),
+                                            ])
+                                            ->columns(3)
+                                            ->reorderableWithButtons()
+                                            ->collapsible()
+                                            ->default(fn ($record) => self::getDefaultSectionsOrderForRecord($record))
+                                            ->afterStateHydrated(function ($component, $state, ?Page $record) {
+                                                if (empty($state) || !is_array($state)) {
+                                                    $component->state(self::getDefaultSectionsOrderForRecord($record));
+                                                }
+                                            })
+                                            ->itemLabel(function (array $state): ?string {
+                                                $options = [
+                                                    'hero' => '🚀 Hero Banner & Visualizer',
+                                                    'stats_bar' => '📊 Key Performance & Stats Bar',
+                                                    'capabilities' => '⚙️ Four Disciplines / Capabilities Grid',
+                                                    'about_teaser' => '📖 National Upgrade / About Story Teaser',
+                                                    'team_teaser' => '👥 Leadership & Founding Partners Teaser',
+                                                    'newsroom' => '📰 Technical Press Releases & Newsroom',
+                                                    'modular_blocks' => '🧩 Custom Modular Dynamic Blocks Canvas',
+                                                    'faqs' => '❓ Frequently Asked Questions Accordion',
+                                                    'cta' => '🎯 Bottom Call To Action (CTA) Banner',
+                                                    'who_we_are' => '🏛️ Identity & Operating Focus (Who We Are)',
+                                                    'principles' => '💎 Core Operating Principles Cards',
+                                                    'timeline' => '⏱️ Company Trajectory & Milestones Timeline',
+                                                    'mission_vision_boxes' => '🎯 Mission & Vision Twin Boxes',
+                                                    'values_grid' => '⚖️ Governing Operating Principles (Values)',
+                                                    'executives' => '👔 Executive Leadership / Founding Partners',
+                                                    'functional_leads' => '🔬 Functional Engineering Discipline Leads',
+                                                    'featured_logo_strip' => '🛡️ Featured Partners Logo Strip',
+                                                    'ecosystem_grid' => '🌐 Four-Tier Ecosystem Directory',
+                                                    'engagement_models' => '🤝 Institutional Engagement Models',
+                                                    'contact_details_and_form' => '📬 Office Directory & Inquiry Form',
+                                                ];
+                                                $key = $state['key'] ?? null;
+                                                return $options[$key] ?? ($state['label'] ?? ucfirst($key ?? 'Section'));
+                                            })
+                                            ->columnSpanFull(),
+                                    ]),
                             ]),
 
                         // 3. ANNOUNCEMENT & NAVIGATION BAR
@@ -496,11 +582,16 @@ class PageResource extends Resource
                                             ->rows(2)
                                             ->placeholder('Key questions on our deployment models, technology specifications, and regional operational capacity.'),
                                         Components\Repeater::make('content.page_faqs')
-                                            ->label('PAGE-SPECIFIC FAQS (Overrides global FAQs if provided)')
+                                            ->label('PAGE-SPECIFIC FAQS (Custom FAQ accordion items for this page)')
                                             ->schema([
-                                                Components\TextInput::make('question')->label('Question')->required(),
-                                                Components\Textarea::make('answer')->label('Answer')->rows(2)->required(),
-                                            ])->columns(2)->collapsible(),
+                                                Components\TextInput::make('question')->label('Question')->required()->columnSpan(1),
+                                                Components\Textarea::make('answer')->label('Answer')->rows(3)->required()->columnSpan(1),
+                                            ])
+                                            ->columns(2)
+                                            ->collapsible()
+                                            ->reorderableWithButtons()
+                                            ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
+                                            ->columnSpanFull(),
                                     ])->columns(2),
                             ]),
 
@@ -529,6 +620,243 @@ class PageResource extends Resource
                                             ->label('BUTTON LINK')
                                             ->placeholder('/contact'),
                                     ])->columns(2),
+                            ]),
+
+                        // 10. MODULAR GENERIC PAGE BLOCKS
+                        Tabs\Tab::make('Modular Blocks')
+                            ->icon('heroicon-o-squares-plus')
+                            ->schema([
+                                Section::make('Reusable Modular Page Blocks')
+                                    ->description('Add, duplicate, reorder, and configure generic website blocks (Zigzags, Card Grids, Stats, Rich Text, Quotes, Logos, CTAs, and FAQs) on this page.')
+                                    ->schema([
+                                        Components\Builder::make('content.dynamic_blocks')
+                                            ->label('Modular Blocks Canvas')
+                                            ->blocks([
+                                                Components\Builder\Block::make('zigzag_split')
+                                                    ->label('Zigzag / Feature Split (Image + Text)')
+                                                    ->icon('heroicon-o-arrows-right-left')
+                                                    ->schema([
+                                                        Components\Toggle::make('is_visible')->label('Visible on Page')->default(true)->inline(false),
+                                                        Components\TextInput::make('eyebrow')->label('Eyebrow')->placeholder('Feature // 01'),
+                                                        Components\TextInput::make('heading')->label('Heading')->required()->placeholder('Ultrasonic Metrology & Static Flow'),
+                                                        Components\Select::make('image_position')
+                                                            ->label('Image Alignment')
+                                                            ->options([
+                                                                'right' => 'Text on Left, Image on Right',
+                                                                'left' => 'Image on Left, Text on Right',
+                                                            ])
+                                                            ->default('right'),
+                                                        Components\Select::make('background_style')
+                                                            ->label('Background Tone')
+                                                            ->options([
+                                                                'surface' => 'Soft Surface (Light Slate)',
+                                                                'white' => 'Clean White',
+                                                                'navy' => 'Deep Navy',
+                                                            ])
+                                                            ->default('surface'),
+                                                        Components\Textarea::make('body')
+                                                            ->label('Body Content')
+                                                            ->rows(3)
+                                                            ->required(),
+                                                        Components\TagsInput::make('bullet_points')
+                                                            ->label('Key Bullet Points')
+                                                            ->placeholder('Add point and press enter'),
+                                                        Components\FileUpload::make('image')
+                                                            ->label('Feature Image / Diagram')
+                                                            ->disk('public')
+                                                            ->directory('pages/blocks')
+                                                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                                                            ->maxSize(10240),
+                                                        Components\TextInput::make('stat_badge_value')->label('Stat Highlight Value')->placeholder('99.94%'),
+                                                        Components\TextInput::make('stat_badge_label')->label('Stat Highlight Label')->placeholder('Packet Assurance'),
+                                                        Components\TextInput::make('button_text')->label('CTA Button Text')->placeholder('Explore architecture'),
+                                                        Components\TextInput::make('button_link')->label('CTA Button Link')->placeholder('/services'),
+                                                    ])->columns(2),
+
+                                                Components\Builder\Block::make('card_grid')
+                                                    ->label('Card Grid / Feature Columns')
+                                                    ->icon('heroicon-o-squares-2x2')
+                                                    ->schema([
+                                                        Components\Toggle::make('is_visible')->label('Visible on Page')->default(true)->inline(false),
+                                                        Components\TextInput::make('eyebrow')->label('Eyebrow')->placeholder('Capabilities'),
+                                                        Components\TextInput::make('heading')->label('Heading')->required()->placeholder('Core System Pillars'),
+                                                        Components\Textarea::make('subtitle')->label('Subtitle')->rows(2),
+                                                        Components\Select::make('columns')
+                                                            ->label('Layout Columns')
+                                                            ->options([
+                                                                '2' => '2 Columns',
+                                                                '3' => '3 Columns',
+                                                                '4' => '4 Columns',
+                                                            ])
+                                                            ->default('3'),
+                                                        Components\Select::make('background_style')
+                                                            ->label('Background Tone')
+                                                            ->options([
+                                                                'surface' => 'Soft Surface (Light Slate)',
+                                                                'white' => 'Clean White',
+                                                                'navy' => 'Deep Navy',
+                                                            ])
+                                                            ->default('white'),
+                                                        Components\Repeater::make('cards')
+                                                            ->label('Cards')
+                                                            ->schema([
+                                                                Components\TextInput::make('icon')->label('Lucide Icon Name')->default('Gauge')->placeholder('e.g. Gauge, RadioTower, ShieldCheck, Cpu, Droplets, Layers'),
+                                                                Components\TextInput::make('tag')->label('Top Tag')->placeholder('01 // MODULE'),
+                                                                Components\TextInput::make('title')->label('Card Title')->required(),
+                                                                Components\Textarea::make('description')->label('Card Description')->rows(2)->required(),
+                                                                Components\TagsInput::make('features')->label('Checklist Items')->placeholder('Add checklist item'),
+                                                                Components\TextInput::make('link_text')->label('Link Label')->placeholder('Learn more'),
+                                                                Components\TextInput::make('link_url')->label('Link Destination URL')->placeholder('/contact'),
+                                                            ])
+                                                            ->columns(2)
+                                                            ->collapsible()
+                                                            ->reorderableWithButtons()
+                                                            ->itemLabel(fn (array $state): ?string => $state['title'] ?? null)
+                                                            ->columnSpanFull(),
+                                                    ])->columns(2),
+
+                                                Components\Builder\Block::make('stats_bar')
+                                                    ->label('Metrics & Stats Bar')
+                                                    ->icon('heroicon-o-chart-bar')
+                                                    ->schema([
+                                                        Components\Toggle::make('is_visible')->label('Visible on Page')->default(true)->inline(false),
+                                                        Components\TextInput::make('heading')->label('Section Heading (Optional)'),
+                                                        Components\Textarea::make('subtitle')->label('Section Subtitle (Optional)')->rows(2),
+                                                        Components\Select::make('background_style')
+                                                            ->label('Background Tone')
+                                                            ->options([
+                                                                'surface_muted' => 'Surface Muted (Light Gray)',
+                                                                'navy' => 'Deep Navy',
+                                                                'white' => 'Clean White',
+                                                            ])
+                                                            ->default('surface_muted'),
+                                                        Components\Repeater::make('stats')
+                                                            ->label('Key Stat Counters')
+                                                            ->schema([
+                                                                Components\TextInput::make('value')->label('Value (e.g. 860,000+)')->required(),
+                                                                Components\TextInput::make('label')->label('Label (e.g. Addressable Endpoints)')->required(),
+                                                                Components\TextInput::make('subtext')->label('Subtext (Optional)'),
+                                                            ])
+                                                            ->columns(3)
+                                                            ->collapsible()
+                                                            ->reorderableWithButtons()
+                                                            ->itemLabel(fn (array $state): ?string => ($state['value'] ?? '') . ' — ' . ($state['label'] ?? ''))
+                                                            ->columnSpanFull(),
+                                                    ])->columns(2),
+
+                                                Components\Builder\Block::make('rich_text')
+                                                    ->label('Editorial / Rich Text Section')
+                                                    ->icon('heroicon-o-document-text')
+                                                    ->schema([
+                                                        Components\Toggle::make('is_visible')->label('Visible on Page')->default(true)->inline(false),
+                                                        Components\TextInput::make('eyebrow')->label('Eyebrow'),
+                                                        Components\TextInput::make('heading')->label('Heading'),
+                                                        Components\Select::make('layout')
+                                                            ->label('Text Layout')
+                                                            ->options([
+                                                                'centered' => 'Centered Reading Column (840px)',
+                                                                'wide' => 'Wide Column (1240px)',
+                                                                'two_column' => 'Two-Column Editorial',
+                                                            ])
+                                                            ->default('centered'),
+                                                        Components\Textarea::make('lead_paragraph')->label('Lead Paragraph')->rows(2)->columnSpanFull(),
+                                                        Components\MarkdownEditor::make('content')->label('Body Content (Markdown Supported)')->columnSpanFull(),
+                                                    ])->columns(2),
+
+                                                Components\Builder\Block::make('quote_highlight')
+                                                    ->label('Quote / Testimonial Highlight')
+                                                    ->icon('heroicon-o-chat-bubble-bottom-center-text')
+                                                    ->schema([
+                                                        Components\Toggle::make('is_visible')->label('Visible on Page')->default(true)->inline(false),
+                                                        Components\Select::make('background_style')
+                                                            ->label('Background Tone')
+                                                            ->options([
+                                                                'surface' => 'Soft Surface (Light)',
+                                                                'navy' => 'Deep Navy',
+                                                                'white' => 'Clean White',
+                                                            ])
+                                                            ->default('surface'),
+                                                        Components\Textarea::make('quote_text')
+                                                            ->label('Quote Text')
+                                                            ->rows(3)
+                                                            ->required()
+                                                            ->columnSpanFull(),
+                                                        Components\TextInput::make('author_name')->label('Author Name'),
+                                                        Components\TextInput::make('author_role')->label('Role / Title'),
+                                                        Components\TextInput::make('author_organization')->label('Organization / Utility'),
+                                                    ])->columns(2),
+
+                                                Components\Builder\Block::make('logo_strip')
+                                                    ->label('Partner / Trust Logo Strip')
+                                                    ->icon('heroicon-o-photo')
+                                                    ->schema([
+                                                        Components\Toggle::make('is_visible')->label('Visible on Page')->default(true)->inline(false),
+                                                        Components\TextInput::make('title')->label('Section Heading')->placeholder('Trusted by Utilities & Multilaterals'),
+                                                        Components\Repeater::make('logos')
+                                                            ->label('Logos')
+                                                            ->schema([
+                                                                Components\TextInput::make('name')->label('Entity Name')->required(),
+                                                                Components\TextInput::make('subtitle')->label('Descriptor (Optional)'),
+                                                                Components\FileUpload::make('logo_image')
+                                                                    ->label('Logo Image')
+                                                                    ->disk('public')
+                                                                    ->directory('pages/logos')
+                                                                    ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp']),
+                                                            ])
+                                                            ->columns(3)
+                                                            ->collapsible()
+                                                            ->reorderableWithButtons()
+                                                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                                                            ->columnSpanFull(),
+                                                    ])->columns(2),
+
+                                                Components\Builder\Block::make('cta_banner')
+                                                    ->label('Call To Action (CTA Banner)')
+                                                    ->icon('heroicon-o-arrow-right-circle')
+                                                    ->schema([
+                                                        Components\Toggle::make('is_visible')->label('Visible on Page')->default(true)->inline(false),
+                                                        Components\TextInput::make('eyebrow')->label('Eyebrow'),
+                                                        Components\TextInput::make('heading')->label('Heading')->required()->placeholder("Let's build the infrastructure Bangladesh needs"),
+                                                        Components\Select::make('background_style')
+                                                            ->label('Background Tone')
+                                                            ->options([
+                                                                'navy' => 'Deep Navy',
+                                                                'surface' => 'Soft Surface',
+                                                            ])
+                                                            ->default('navy'),
+                                                        Components\Textarea::make('subtitle')->label('Subtitle / Description')->rows(2)->columnSpanFull(),
+                                                        Components\TextInput::make('primary_btn_text')->label('Primary Button Text')->default('Get in touch'),
+                                                        Components\TextInput::make('primary_btn_link')->label('Primary Button Link')->default('/contact'),
+                                                        Components\TextInput::make('secondary_btn_text')->label('Secondary Button Text (Optional)'),
+                                                        Components\TextInput::make('secondary_btn_link')->label('Secondary Button Link (Optional)'),
+                                                    ])->columns(2),
+
+                                                Components\Builder\Block::make('faq_accordion')
+                                                    ->label('FAQ Accordion Block')
+                                                    ->icon('heroicon-o-question-mark-circle')
+                                                    ->schema([
+                                                        Components\Toggle::make('is_visible')->label('Visible on Page')->default(true)->inline(false),
+                                                        Components\TextInput::make('eyebrow')->label('Eyebrow')->placeholder('FAQ'),
+                                                        Components\TextInput::make('heading')->label('Heading')->default('Frequently Asked Questions'),
+                                                        Components\Textarea::make('subtitle')->label('Subtitle')->rows(2),
+                                                        Components\Repeater::make('faqs')
+                                                            ->label('Questions & Answers')
+                                                            ->schema([
+                                                                Components\TextInput::make('question')->label('Question')->required(),
+                                                                Components\Textarea::make('answer')->label('Answer')->rows(3)->required(),
+                                                            ])
+                                                            ->columns(2)
+                                                            ->collapsible()
+                                                            ->reorderableWithButtons()
+                                                            ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
+                                                            ->columnSpanFull(),
+                                                    ])->columns(2),
+                                            ])
+                                            ->cloneable()
+                                            ->collapsible()
+                                            ->reorderableWithButtons()
+                                            ->columnSpanFull(),
+                                    ]),
                             ]),
                     ])->columnSpanFull(),
             ]);
@@ -610,6 +938,73 @@ class PageResource extends Resource
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getDefaultSectionsOrderForRecord(?Page $record): array
+    {
+        $slug = $record?->slug ?? '/';
+        return match ($slug) {
+            '/' => [
+                ['key' => 'hero', 'label' => 'Hero Banner & Telemetry Visualizer', 'is_enabled' => true],
+                ['key' => 'stats_bar', 'label' => 'Key Performance & Stats Bar', 'is_enabled' => true],
+                ['key' => 'capabilities', 'label' => 'Four Disciplines / Capabilities Grid', 'is_enabled' => true],
+                ['key' => 'about_teaser', 'label' => 'National Upgrade / About Story Teaser', 'is_enabled' => true],
+                ['key' => 'team_teaser', 'label' => 'Leadership & Founding Partners Teaser', 'is_enabled' => true],
+                ['key' => 'newsroom', 'label' => 'Technical Press Releases & Newsroom Feed', 'is_enabled' => true],
+                ['key' => 'modular_blocks', 'label' => 'Custom Modular Dynamic Blocks Canvas', 'is_enabled' => true],
+                ['key' => 'faqs', 'label' => 'Frequently Asked Questions Accordion', 'is_enabled' => true],
+                ['key' => 'cta', 'label' => 'Bottom Call To Action (CTA) Banner', 'is_enabled' => true],
+            ],
+            'about' => [
+                ['key' => 'hero', 'label' => 'Company Overview Hero Banner', 'is_enabled' => true],
+                ['key' => 'stats_bar', 'label' => 'Scale & Performance Stats Bar', 'is_enabled' => true],
+                ['key' => 'who_we_are', 'label' => 'Identity & Operating Focus (Who We Are)', 'is_enabled' => true],
+                ['key' => 'principles', 'label' => 'Core Operating Principles Cards', 'is_enabled' => true],
+                ['key' => 'timeline', 'label' => 'Company Trajectory & Milestones Timeline', 'is_enabled' => true],
+                ['key' => 'modular_blocks', 'label' => 'Custom Modular Dynamic Blocks Canvas', 'is_enabled' => true],
+                ['key' => 'faqs', 'label' => 'Frequently Asked Questions Accordion', 'is_enabled' => true],
+                ['key' => 'cta', 'label' => 'Bottom Call To Action (CTA) Banner', 'is_enabled' => true],
+            ],
+            'about/mission-vision' => [
+                ['key' => 'hero', 'label' => 'Mission & Vision Hero Banner', 'is_enabled' => true],
+                ['key' => 'mission_vision_boxes', 'label' => 'Mission & Vision Strategic Intent Twin Boxes', 'is_enabled' => true],
+                ['key' => 'values_grid', 'label' => 'Governing Operating Principles Grid (Values)', 'is_enabled' => true],
+                ['key' => 'modular_blocks', 'label' => 'Custom Modular Dynamic Blocks Canvas', 'is_enabled' => true],
+                ['key' => 'faqs', 'label' => 'Frequently Asked Questions Accordion', 'is_enabled' => true],
+                ['key' => 'cta', 'label' => 'Bottom Call To Action (CTA) Banner', 'is_enabled' => true],
+            ],
+            'about/team' => [
+                ['key' => 'hero', 'label' => 'Team & Leadership Hero Banner', 'is_enabled' => true],
+                ['key' => 'executives', 'label' => 'Executive Leadership / Founding Partners', 'is_enabled' => true],
+                ['key' => 'functional_leads', 'label' => 'Functional Engineering Discipline Leads', 'is_enabled' => true],
+                ['key' => 'modular_blocks', 'label' => 'Custom Modular Dynamic Blocks Canvas', 'is_enabled' => true],
+                ['key' => 'faqs', 'label' => 'Frequently Asked Questions Accordion', 'is_enabled' => true],
+                ['key' => 'cta', 'label' => 'Bottom Call To Action (CTA) Banner', 'is_enabled' => true],
+            ],
+            'partners' => [
+                ['key' => 'hero', 'label' => 'Partners & Ecosystem Hero Banner', 'is_enabled' => true],
+                ['key' => 'featured_logo_strip', 'label' => 'Featured Partners Logo Strip', 'is_enabled' => true],
+                ['key' => 'ecosystem_grid', 'label' => 'Four-Tier Ecosystem Directory (Utilities, OEMs, Telcos, Banks)', 'is_enabled' => true],
+                ['key' => 'engagement_models', 'label' => 'Institutional Engagement Models', 'is_enabled' => true],
+                ['key' => 'modular_blocks', 'label' => 'Custom Modular Dynamic Blocks Canvas', 'is_enabled' => true],
+                ['key' => 'faqs', 'label' => 'Frequently Asked Questions Accordion', 'is_enabled' => true],
+                ['key' => 'cta', 'label' => 'Bottom Call To Action (CTA) Banner', 'is_enabled' => true],
+            ],
+            'contact' => [
+                ['key' => 'hero', 'label' => 'Contact Page Hero Banner', 'is_enabled' => true],
+                ['key' => 'contact_details_and_form', 'label' => 'Office Directory & Inbound Inquiry Form', 'is_enabled' => true],
+                ['key' => 'modular_blocks', 'label' => 'Custom Modular Dynamic Blocks Canvas', 'is_enabled' => true],
+                ['key' => 'faqs', 'label' => 'Frequently Asked Questions Accordion', 'is_enabled' => true],
+                ['key' => 'cta', 'label' => 'Bottom Call To Action (CTA) Banner', 'is_enabled' => false],
+            ],
+            default => [
+                ['key' => 'hero', 'label' => 'Page Hero Banner', 'is_enabled' => true],
+                ['key' => 'body_content', 'label' => 'Page Body Content', 'is_enabled' => true],
+                ['key' => 'modular_blocks', 'label' => 'Custom Modular Dynamic Blocks Canvas', 'is_enabled' => true],
+                ['key' => 'faqs', 'label' => 'Frequently Asked Questions Accordion', 'is_enabled' => true],
+                ['key' => 'cta', 'label' => 'Bottom Call To Action (CTA) Banner', 'is_enabled' => true],
+            ],
+        };
     }
 
     public static function getPages(): array

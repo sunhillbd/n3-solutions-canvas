@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\View as SchemaView;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -21,7 +22,7 @@ class SiteSettingResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Site Navigation & Layout';
+    protected static string | UnitEnum | null $navigationGroup = 'Website & Navigation';
 
     protected static ?string $navigationLabel = 'Website Settings';
 
@@ -31,132 +32,71 @@ class SiteSettingResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Settings Area')
-                    ->schema([
-                        Components\TextInput::make('key')
-                            ->label('Settings Identifier')
-                            ->disabled()
-                            ->formatStateUsing(fn ($state) => match ($state) {
-                                'general' => 'Global Brand, Contact & Default SEO',
-                                'header' => 'Top Navigation Header & Branding',
-                                'footer' => 'Footer Columns & Layout',
-                                default => ucfirst($state ?? ''),
-                            }),
-                    ]),
-
-                // 1. General Global Settings
-                Section::make('General Brand & Global Identity')
+                // 1. Main Site & Global Settings Layout
+                Section::make()
                     ->visible(fn ($record) => $record?->key === 'general')
                     ->schema([
-                        Tabs::make('GeneralSettingsTabs')
+                        Tabs::make('SettingsTabs')
+                            ->extraAttributes(['class' => 'settings-pill-tabs'])
                             ->tabs([
-                                Tabs\Tab::make('Brand & Identity')
+                                // Tab 1: Branding
+                                Tabs\Tab::make('Branding')
+                                    ->icon('heroicon-o-paint-brush')
+                                    ->schema([
+                                        self::getBrandingSection(),
+                                    ]),
+
+                                // Tab 2: Site Info
+                                Tabs\Tab::make('Site Info')
                                     ->icon('heroicon-o-building-office-2')
                                     ->schema([
-                                        Components\TextInput::make('payload.site_name')
-                                            ->label('Website / Company Name')
-                                            ->default('N3 Solutions Limited')
-                                            ->required(),
-                                        Components\TextInput::make('payload.tagline')
-                                            ->label('Global Tagline')
-                                            ->default('Engineering measured, connected and maintainable infrastructure at national scale.'),
-                                        Components\FileUpload::make('payload.logo')
-                                            ->label('Website Logo (SVG, PNG or JPG)')
-                                            ->image()
-                                            ->disk('public')
-                                            ->directory('settings')
-                                            ->visibility('public')
-                                            ->maxSize(5120)
-                                            ->helperText('Upload transparent SVG, PNG, JPG or WEBP (Max 5MB).'),
-                                        Components\FileUpload::make('payload.favicon')
-                                            ->label('Website Favicon (ICO or PNG)')
-                                            ->disk('public')
-                                            ->directory('settings')
-                                            ->visibility('public')
-                                            ->maxSize(2048)
-                                            ->acceptedFileTypes(['image/x-icon', 'image/vnd.microsoft.icon', 'image/png', 'image/svg+xml', 'image/svg', 'image/jpeg', 'image/webp', 'text/plain', 'text/xml'])
-                                            ->helperText('Upload ICO, PNG or SVG favicon (Max 2MB).'),
-                                    ])->columns(2),
+                                        self::getSiteInfoSection(),
+                                    ]),
 
-                                Tabs\Tab::make('Contact & Office')
-                                    ->icon('heroicon-o-envelope')
-                                    ->schema([
-                                        Components\TextInput::make('payload.contact_email')
-                                            ->label('Primary Contact Email')
-                                            ->email()
-                                            ->default('contact@n3solutions.com')
-                                            ->required(),
-                                        Components\TextInput::make('payload.contact_phone')
-                                            ->label('Telephone Number')
-                                            ->default('+880 2 000 0000'),
-                                        Components\Textarea::make('payload.office_address')
-                                            ->label('Physical Office Address')
-                                            ->default('Gulshan Avenue, Dhaka 1212, Bangladesh')
-                                            ->rows(2)
-                                            ->columnSpanFull(),
-                                        Components\TextInput::make('payload.copyright_text')
-                                            ->label('Footer Copyright Notice')
-                                            ->default('© 2026 N3 Solutions Limited. All rights reserved.')
-                                            ->columnSpanFull(),
-                                    ])->columns(2),
-
-                                Tabs\Tab::make('Social Media')
+                                // Tab 3: Social Links
+                                Tabs\Tab::make('Social Links')
                                     ->icon('heroicon-o-share')
                                     ->schema([
-                                        Components\TextInput::make('payload.social_links.linkedin')
-                                            ->label('LinkedIn Profile URL')
-                                            ->url()
-                                            ->placeholder('https://linkedin.com/company/...'),
-                                        Components\TextInput::make('payload.social_links.twitter')
-                                            ->label('Twitter / X Profile URL')
-                                            ->url()
-                                            ->placeholder('https://x.com/...'),
-                                        Components\TextInput::make('payload.social_links.facebook')
-                                            ->label('Facebook Page URL')
-                                            ->url()
-                                            ->placeholder('https://facebook.com/...'),
-                                        Components\TextInput::make('payload.social_links.github')
-                                            ->label('GitHub Organization URL')
-                                            ->url()
-                                            ->placeholder('https://github.com/...'),
-                                    ])->columns(2),
+                                        self::getSocialLinksSection(),
+                                    ]),
 
-                                Tabs\Tab::make('Global Default SEO')
+                                // Tab 4: SEO & Meta
+                                Tabs\Tab::make('SEO & Meta')
                                     ->icon('heroicon-o-magnifying-glass')
                                     ->schema([
-                                        Components\TextInput::make('payload.default_seo.meta_title')
-                                            ->label('Default Meta Title')
-                                            ->default('N3 Solutions Limited — Infrastructure & IoT Engineering')
-                                            ->helperText('Fallback title when page-specific title is not set.'),
-                                        Components\Textarea::make('payload.default_seo.meta_description')
-                                            ->label('Default Meta Description')
-                                            ->default('N3 Solutions Limited engineers smart water metering, IoT infrastructure and field operations for utilities and public infrastructure at national scale.')
-                                            ->rows(3)
-                                            ->helperText('Fallback meta description for search engines and social cards.'),
-                                        Components\FileUpload::make('payload.default_seo.og_image')
-                                            ->label('Default Social Share Card (OG Image)')
-                                            ->disk('public')
-                                            ->directory('settings')
-                                            ->visibility('public')
-                                            ->maxSize(5120)
-                                            ->imageResizeMode('cover')
-                                            ->imageCropAspectRatio('1200:630')
-                                            ->helperText('Recommended 1200x630px JPG, PNG or WEBP (Max 5MB).'),
-                                    ])->columns(1),
+                                        self::getSeoSection(),
+                                    ]),
+
+                                // Tab 5: AEO & AI Search
+                                Tabs\Tab::make('AEO & AI Search')
+                                    ->icon('heroicon-o-sparkles')
+                                    ->schema([
+                                        self::getAeoSection(),
+                                    ]),
+
+                                // Tab 6: Google Tag
+                                Tabs\Tab::make('Google Tag')
+                                    ->icon('heroicon-o-tag')
+                                    ->schema([
+                                        self::getAnalyticsSection(),
+                                    ]),
                             ])
                             ->columnSpanFull(),
                     ]),
 
-                // 2. Header Specific Settings
-                Section::make('Header Configuration')
+                // 3. Top Navigation Header Settings
+                Section::make('Top Navigation Header & Menu Architecture')
+                    ->description('Manage primary logo text, CTA button, and multi-level header menu items.')
                     ->visible(fn ($record) => $record?->key === 'header')
                     ->schema([
                         Components\TextInput::make('payload.logo_text')
-                            ->label('Logo / Brand Text')
-                            ->default('N3 Solutions Limited'),
+                            ->label('Brand Logo Text')
+                            ->default('N3 Solutions Limited')
+                            ->required(),
                         Components\Toggle::make('payload.show_cta_button')
                             ->label('Display "Talk to us" Action Button in Header')
-                            ->default(true),
+                            ->default(true)
+                            ->inline(false),
                         Components\TextInput::make('payload.cta_button_text')
                             ->label('Header Button Label')
                             ->default('Talk to us'),
@@ -165,15 +105,15 @@ class SiteSettingResource extends Resource
                             ->default('/contact'),
 
                         Components\Repeater::make('payload.menu_items')
-                            ->label('Header Navigation Menu Items')
+                            ->label('Header Navigation Menu Architecture')
                             ->schema([
-                                Components\TextInput::make('label')->label('Menu Label (e.g. Services, About, Partners)')->required(),
-                                Components\TextInput::make('url')->label('URL / Route (e.g. /services, /about)')->required(),
+                                Components\TextInput::make('label')->label('Menu Item Label')->required(),
+                                Components\TextInput::make('url')->label('Destination URL / Route')->required(),
                                 Components\Select::make('type')
-                                    ->label('Type')
+                                    ->label('Menu Type')
                                     ->options([
                                         'link' => 'Direct Link',
-                                        'dropdown' => 'Dropdown Menu',
+                                        'dropdown' => 'Dropdown Sub-Menu',
                                     ])
                                     ->default('link')
                                     ->reactive(),
@@ -181,20 +121,23 @@ class SiteSettingResource extends Resource
                                     ->label('Dropdown Sub-Items')
                                     ->visible(fn ($get) => $get('type') === 'dropdown')
                                     ->schema([
-                                        Components\TextInput::make('label')->label('Sub-Item Label')->required(),
+                                        Components\TextInput::make('label')->label('Sub-Item Title')->required(),
                                         Components\TextInput::make('url')->label('Sub-Item URL')->required(),
-                                        Components\TextInput::make('desc')->label('Brief Subtitle / Description'),
+                                        Components\TextInput::make('desc')->label('Supporting Subtitle / Descriptor'),
                                     ])
                                     ->columns(3)
-                                    ->collapsible(),
+                                    ->collapsible()
+                                    ->reorderableWithButtons(),
                             ])
                             ->collapsible()
                             ->reorderableWithButtons()
+                            ->itemLabel(fn (array $state): ?string => $state['label'] ?? null)
                             ->columnSpanFull(),
                     ])->columns(2),
 
-                // 3. Footer Specific Settings
-                Section::make('Footer Configuration')
+                // 4. Footer Configuration Settings
+                Section::make('Footer Architecture & Legal Notice')
+                    ->description('Configure footer mission copy, office contact channels, navigation columns, and legal text.')
                     ->visible(fn ($record) => $record?->key === 'footer')
                     ->schema([
                         Components\Textarea::make('payload.tagline')
@@ -207,29 +150,201 @@ class SiteSettingResource extends Resource
                         Components\TextInput::make('payload.contact_phone')
                             ->label('Primary Telephone Number'),
                         Components\Textarea::make('payload.office_address')
-                            ->label('Office Address')
+                            ->label('Physical Headquarters Office Address')
                             ->rows(2),
                         Components\TextInput::make('payload.copyright_text')
-                            ->label('Copyright Notice'),
+                            ->label('Footer Copyright Notice'),
 
                         Components\Repeater::make('payload.columns')
-                            ->label('Footer Navigation Columns')
+                            ->label('Footer Multi-Column Link Directories')
                             ->schema([
-                                Components\TextInput::make('title')->label('Column Title (e.g. Company, Solutions, Resources)')->required(),
+                                Components\TextInput::make('title')->label('Column Heading (e.g. Company, Solutions, Resources)')->required(),
                                 Components\Repeater::make('links')
                                     ->label('Column Links')
                                     ->schema([
                                         Components\TextInput::make('label')->label('Link Label')->required(),
-                                        Components\TextInput::make('url')->label('Link URL')->required(),
+                                        Components\TextInput::make('url')->label('Target URL')->required(),
                                     ])
                                     ->columns(2)
-                                    ->collapsible(),
+                                    ->collapsible()
+                                    ->reorderableWithButtons(),
                             ])
                             ->collapsible()
                             ->reorderableWithButtons()
+                            ->itemLabel(fn (array $state): ?string => $state['title'] ?? null)
                             ->columnSpanFull(),
                     ])->columns(2),
             ]);
+    }
+
+    /* Sub-Section 1: Branding & Media Assets */
+    protected static function getBrandingSection(): Section
+    {
+        return Section::make('Branding & Media Assets')
+            ->description('Upload official brand logos and browser icons used across the application.')
+            ->icon('heroicon-o-paint-brush')
+            ->schema([
+                Components\FileUpload::make('payload.logo')
+                    ->label('Logo (Light Mode)  —  [PNG / SVG / WEBP]')
+                    ->helperText('Main brand mark used on white or light backgrounds across navigation headers and sidebars.')
+                    ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'])
+                    ->disk('public')
+                    ->directory('settings')
+                    ->visibility('public')
+                    ->maxSize(5120)
+                    ->columnSpan(1),
+
+                Components\FileUpload::make('payload.logo_dark')
+                    ->label('Logo (Dark Mode)  —  [PNG / SVG / WEBP]')
+                    ->helperText('Alternative brand mark used for dark backgrounds, footer banners, or dark theme views.')
+                    ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'])
+                    ->disk('public')
+                    ->directory('settings')
+                    ->visibility('public')
+                    ->maxSize(5120)
+                    ->columnSpan(1),
+
+                Components\FileUpload::make('payload.favicon')
+                    ->label('Favicon / Browser Icon  —  [ICO / PNG / SVG]')
+                    ->helperText('Browser tab shortcut icon and mobile home-screen badge.')
+                    ->disk('public')
+                    ->directory('settings')
+                    ->visibility('public')
+                    ->maxSize(2048)
+                    ->acceptedFileTypes(['image/x-icon', 'image/vnd.microsoft.icon', 'image/png', 'image/svg+xml', 'image/svg', 'image/jpeg', 'image/webp'])
+                    ->columnSpan(1),
+            ])
+            ->columns(3);
+    }
+
+    /* Sub-Section 2: Site Info & Official Contact */
+    protected static function getSiteInfoSection(): Section
+    {
+        return Section::make('Site Information & Corporate Channels')
+            ->description('Official organization details, public contact channels, and physical office location.')
+            ->icon('heroicon-o-building-office-2')
+            ->schema([
+                Components\TextInput::make('payload.site_name')
+                    ->label('Website / Company Name')
+                    ->default('N3 Solutions Limited')
+                    ->required(),
+                Components\TextInput::make('payload.tagline')
+                    ->label('Global Tagline')
+                    ->default('Engineering measured, connected and maintainable infrastructure at national scale.'),
+                Components\TextInput::make('payload.contact_email')
+                    ->label('Primary Contact Email')
+                    ->email()
+                    ->default('contact@n3solutions.com')
+                    ->required(),
+                Components\TextInput::make('payload.contact_phone')
+                    ->label('Telephone Number')
+                    ->default('+880 2 000 0000'),
+                Components\Textarea::make('payload.office_address')
+                    ->label('Physical Office Address')
+                    ->default('Gulshan Avenue, Dhaka 1212, Bangladesh')
+                    ->rows(2),
+                Components\TextInput::make('payload.copyright_text')
+                    ->label('Footer Copyright Notice')
+                    ->default('© 2026 N3 Solutions Limited. All rights reserved.'),
+            ])
+            ->columns(2);
+    }
+
+    /* Sub-Section 3: Social Links */
+    protected static function getSocialLinksSection(): Section
+    {
+        return Section::make('Social Profiles & Digital Presence')
+            ->description('Official corporate social media profiles and source code repositories.')
+            ->icon('heroicon-o-share')
+            ->schema([
+                Components\TextInput::make('payload.social_links.linkedin')
+                    ->label('LinkedIn Profile URL')
+                    ->url()
+                    ->placeholder('https://linkedin.com/company/n3-solutions'),
+                Components\TextInput::make('payload.social_links.twitter')
+                    ->label('Twitter / X Profile URL')
+                    ->url()
+                    ->placeholder('https://x.com/n3solutions'),
+                Components\TextInput::make('payload.social_links.facebook')
+                    ->label('Facebook Page URL')
+                    ->url()
+                    ->placeholder('https://facebook.com/n3solutions'),
+                Components\TextInput::make('payload.social_links.github')
+                    ->label('GitHub Organization URL')
+                    ->url()
+                    ->placeholder('https://github.com/n3solutions'),
+            ])
+            ->columns(2);
+    }
+
+    /* Sub-Section 4: SEO & Meta */
+    protected static function getSeoSection(): Section
+    {
+        return Section::make('Search Engine Optimization (SEO)')
+            ->description('Default meta titles, descriptions, and OpenGraph social card previews for web crawlers.')
+            ->icon('heroicon-o-magnifying-glass')
+            ->schema([
+                Components\TextInput::make('payload.default_seo.meta_title')
+                    ->label('Default Meta Title')
+                    ->default('N3 Solutions Limited — Infrastructure & IoT Engineering')
+                    ->helperText('Fallback title when page-specific title is not set.')
+                    ->columnSpanFull(),
+                Components\Textarea::make('payload.default_seo.meta_description')
+                    ->label('Default Meta Description')
+                    ->default('N3 Solutions Limited engineers smart water metering, IoT infrastructure and field operations for utilities and public infrastructure at national scale.')
+                    ->rows(3)
+                    ->helperText('Fallback meta description for search engines and social cards.')
+                    ->columnSpanFull(),
+                Components\FileUpload::make('payload.default_seo.og_image')
+                    ->label('Default Social Share Card (OG Image)  —  [1200x630px]')
+                    ->disk('public')
+                    ->directory('settings')
+                    ->visibility('public')
+                    ->maxSize(5120)
+                    ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                    ->helperText('Recommended 1200x630px JPG, PNG or WEBP (Max 5MB).')
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    /* Sub-Section 5: AEO & AI Search */
+    protected static function getAeoSection(): Section
+    {
+        return Section::make('Answer Engine Optimization (AEO)')
+            ->description('Direct knowledge answers and core entities for generative AI engines (ChatGPT, Perplexity, Google AI Overviews).')
+            ->icon('heroicon-o-sparkles')
+            ->schema([
+                Components\Textarea::make('payload.aeo.direct_answer')
+                    ->label('AI Direct Answer Snippet')
+                    ->default('N3 Solutions Limited is a specialized infrastructure and technology firm in Bangladesh engineering turnkey smart water metering, private LPWAN IoT networks, and SLA-backed utility field operations.')
+                    ->rows(3)
+                    ->helperText('Concise, factual summary optimized for direct citation in AI answers.')
+                    ->columnSpanFull(),
+                Components\TagsInput::make('payload.aeo.key_entities')
+                    ->label('Core Knowledge Graph Entities')
+                    ->placeholder('Add entity and press enter')
+                    ->default(['N3 Solutions Limited', 'Smart Water Metering', 'IoT Infrastructure', 'WASA Bangladesh', 'Non-Revenue Water'])
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    /* Sub-Section 6: Google Tag & Analytics */
+    protected static function getAnalyticsSection(): Section
+    {
+        return Section::make('Google Tag & Script Injection')
+            ->description('Integrate Google Analytics 4, Tag Manager, or custom tracking pixels.')
+            ->icon('heroicon-o-tag')
+            ->schema([
+                Components\TextInput::make('payload.analytics.google_tag_id')
+                    ->label('Google Analytics / GTM ID')
+                    ->placeholder('e.g. G-XXXXXXXXXX or GTM-XXXXXXX'),
+                Components\Textarea::make('payload.analytics.custom_head_scripts')
+                    ->label('Custom Header Scripts (<head>)')
+                    ->placeholder('<!-- Custom tracking scripts -->')
+                    ->rows(4)
+                    ->columnSpanFull(),
+            ])
+            ->columns(1);
     }
 
     public static function table(Table $table): Table
@@ -237,12 +352,12 @@ class SiteSettingResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('key')
-                    ->label('Settings Area')
+                    ->label('Configuration Area')
                     ->weight('bold')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'general' => 'Global Brand, Contact & Default SEO',
-                        'header' => 'Header Navigation & Top Bar',
-                        'footer' => 'Footer Columns & Layout',
+                        'general' => 'Site & Global Settings (Brand, Contact, SEO, AEO)',
+                        'header' => 'Header Architecture & Navigation Menu',
+                        'footer' => 'Footer Columns & Legal Notice',
                         default => ucfirst($state),
                     }),
                 Tables\Columns\TextColumn::make('updated_at')

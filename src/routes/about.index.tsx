@@ -4,6 +4,8 @@ import { ArrowRight, Building2, Compass, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/n3/SiteHeader";
 import { SiteFooter } from "@/components/n3/SiteFooter";
+import { PageFaqSection } from "@/components/n3/PageFaqSection";
+import { DynamicBlockRenderer } from "@/components/n3/DynamicBlockRenderer";
 import { fetchPage, ApiPageData, getIconComponent } from "@/lib/api";
 
 export const Route = createFileRoute("/about/")({
@@ -105,142 +107,188 @@ function AboutPage() {
       <SiteHeader />
 
       <main>
-        {/* 1. Hero */}
-        {toggles.show_hero !== false && (
-          <section className="relative overflow-hidden bg-surface pt-44 pb-24 lg:pt-52 lg:pb-32">
-            <div className="rule-grid pointer-events-none absolute inset-0" aria-hidden="true" />
-            <div
-              className="pointer-events-none absolute top-0 right-0 h-full w-1/3 bg-gradient-to-b from-transparent via-transparent to-[color-mix(in_oklab,var(--color-accent-teal)_6%,transparent)]"
-              aria-hidden="true"
-            />
+        {(() => {
+          const defaultOrder = [
+            "hero",
+            "stats_bar",
+            "who_we_are",
+            "principles",
+            "timeline",
+            "modular_blocks",
+            "faqs",
+            "cta",
+          ];
 
-            <div className="relative mx-auto max-w-[1240px] px-6 lg:px-10">
-              <div className="max-w-3xl">
-                <p className="eyebrow">{content.hero_eyebrow || "Company Overview"}</p>
-                <h1 className="mt-6 text-[2.6rem] leading-[1.06] font-semibold tracking-[-0.025em] text-navy sm:text-5xl lg:text-[3.5rem]">
-                  {content.hero_title || "Engineering the infrastructure behind smarter utilities"}
-                </h1>
-                <p className="mt-8 text-lg leading-relaxed text-muted-foreground">
-                  {content.hero_subtitle ||
-                    "N3 Solutions Limited is an infrastructure and technology engineering firm based in Dhaka, Bangladesh. We design, deploy, and maintain the metering, connectivity, and field operations that public utilities depend on — at national scale, to measurable standards."}
-                </p>
-                <div className="mt-10 flex flex-wrap items-center gap-5">
-                  <Button variant="accent" size="xl" asChild>
-                    <Link to={content.hero_cta_link || "/contact"}>
-                      {content.hero_cta_text || "Start a conversation"} <ArrowRight />
-                    </Link>
-                  </Button>
-                  <Link
-                    to="/about/mission-vision"
-                    className="text-sm font-medium tracking-[0.04em] text-navy underline-offset-8 transition-colors duration-200 hover:text-accent-teal hover:underline"
-                  >
-                    Our Mission & Vision
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
+          const activeSectionsOrder: string[] = (() => {
+            if (Array.isArray(content.sections_order) && content.sections_order.length > 0) {
+              return content.sections_order
+                .filter((item: any) => item.is_enabled !== false)
+                .map((item: any) => (typeof item === "string" ? item : item.key));
+            }
+            return defaultOrder;
+          })();
 
-        {/* 2. Scale Bar */}
-        {toggles.show_stats_bar !== false && (
-          <section className="border-y border-hairline bg-surface-muted">
-            <div className="mx-auto grid max-w-[1240px] grid-cols-2 gap-px px-6 lg:grid-cols-4 lg:px-10">
-              {stats.map((stat) => (
-                <div key={stat.label} className="px-2 py-12 lg:px-8">
-                  <p className="text-[2.1rem] leading-none font-semibold tracking-[-0.03em] text-navy lg:text-[2.6rem]">
-                    {stat.value}
-                  </p>
-                  <p className="mt-4 text-[0.78rem] leading-snug tracking-[0.06em] text-muted-foreground uppercase">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+          const renderSection = (key: string) => {
+            switch (key) {
+              case "hero":
+                return toggles.show_hero !== false ? (
+                  <section key="hero" className="relative overflow-hidden bg-surface pt-44 pb-24 lg:pt-52 lg:pb-32">
+                    <div className="rule-grid pointer-events-none absolute inset-0" aria-hidden="true" />
+                    <div
+                      className="pointer-events-none absolute top-0 right-0 h-full w-1/3 bg-gradient-to-b from-transparent via-transparent to-[color-mix(in_oklab,var(--color-accent-teal)_6%,transparent)]"
+                      aria-hidden="true"
+                    />
 
-        {/* 3. Who We Are */}
-        {toggles.show_who_we_are !== false && (
-          <section className="bg-background py-28 lg:py-36">
-            <div className="mx-auto grid max-w-[1240px] gap-16 px-6 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:px-10">
-              <div>
-                <p className="eyebrow">{content.who_we_are_eyebrow || "Identity & Focus"}</p>
-                <h2 className="mt-6 text-[2rem] leading-[1.12] font-semibold tracking-[-0.02em] text-navy lg:text-[2.75rem]">
-                  {content.who_we_are_title || "Built for the long term, measured by reliability"}
-                </h2>
-                <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-                  {content.who_we_are_text_1 ||
-                    "We work where precision engineering meets public responsibility. Our teams deploy smart water metering, low-power IoT networks, and managed field operations for utilities and government stakeholders — programmes measured in hundreds of thousands of endpoints and decades of service life."}
-                </p>
-                <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                  {content.who_we_are_text_2 ||
-                    "We are deliberately structured for long-term operational resilience: in-house metrology engineering, full-time regional field teams, and supply-chain partnerships with tier-one global manufacturers. Reliability is not a feature of our work; it is the work."}
-                </p>
-              </div>
+                    <div className="relative mx-auto max-w-[1240px] px-6 lg:px-10">
+                      <div className="max-w-3xl">
+                        <p className="eyebrow">{content.hero_eyebrow || "Company Overview"}</p>
+                        <h1 className="mt-6 text-[2.6rem] leading-[1.06] font-semibold tracking-[-0.025em] text-navy sm:text-5xl lg:text-[3.5rem]">
+                          {content.hero_title || "Engineering the infrastructure behind smarter utilities"}
+                        </h1>
+                        <p className="mt-8 text-lg leading-relaxed text-muted-foreground">
+                          {content.hero_subtitle ||
+                            "N3 Solutions Limited is an infrastructure and technology engineering firm based in Dhaka, Bangladesh. We design, deploy, and maintain the metering, connectivity, and field operations that public utilities depend on — at national scale, to measurable standards."}
+                        </p>
+                        <div className="mt-10 flex flex-wrap items-center gap-5">
+                          <Button variant="accent" size="xl" asChild>
+                            <Link to={content.hero_cta_link || "/contact"}>
+                              {content.hero_cta_text || "Start a conversation"} <ArrowRight />
+                            </Link>
+                          </Button>
+                          <Link
+                            to="/about/mission-vision"
+                            className="text-sm font-medium tracking-[0.04em] text-navy underline-offset-8 transition-colors duration-200 hover:text-accent-teal hover:underline"
+                          >
+                            Our Mission & Vision
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                ) : null;
 
-              <div className="space-y-6">
-                {principles.map((p) => (
-                  <div
-                    key={p.title}
-                    className="rounded border border-hairline bg-surface p-8 transition-shadow hover:shadow-xs"
-                  >
-                    <p.icon className="h-6 w-6 text-accent-teal" strokeWidth={1.5} />
-                    <h3 className="mt-5 text-lg font-semibold text-navy">{p.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+              case "stats_bar":
+                return toggles.show_stats_bar !== false ? (
+                  <section key="stats_bar" className="border-y border-hairline bg-surface-muted">
+                    <div className="mx-auto grid max-w-[1240px] grid-cols-2 gap-px px-6 lg:grid-cols-4 lg:px-10">
+                      {stats.map((stat) => (
+                        <div key={stat.label} className="px-2 py-12 lg:px-8">
+                          <p className="text-[2.1rem] leading-none font-semibold tracking-[-0.03em] text-navy lg:text-[2.6rem]">
+                            {stat.value}
+                          </p>
+                          <p className="mt-4 text-[0.78rem] leading-snug tracking-[0.06em] text-muted-foreground uppercase">
+                            {stat.label}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                ) : null;
 
-        {/* 4. Timeline */}
-        {toggles.show_timeline !== false && (
-          <section className="bg-navy-deep py-28 text-navy-foreground">
-            <div className="mx-auto max-w-[1240px] px-6 lg:px-10">
-              <p className="text-[0.6875rem] font-semibold tracking-[0.18em] text-accent-teal uppercase">
-                {content.timeline_eyebrow || "Company Trajectory"}
-              </p>
-              <h2 className="mt-4 text-[2rem] leading-[1.12] font-semibold tracking-[-0.02em] lg:text-[2.75rem]">
-                {content.timeline_title || "A measured, disciplined expansion"}
-              </h2>
-              <div className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-                {milestones.map((m) => (
-                  <div
-                    key={m.year}
-                    className="border-t border-[color-mix(in_oklab,var(--color-surface)_20%,transparent)] pt-6"
-                  >
-                    <p className="text-2xl font-semibold text-accent-teal">{m.year}</p>
-                    <p className="mt-3 text-sm leading-relaxed text-navy-foreground/75">{m.event}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+              case "who_we_are":
+              case "principles":
+                return toggles.show_who_we_are !== false ? (
+                  <section key="who_we_are" className="bg-background py-28 lg:py-36">
+                    <div className="mx-auto grid max-w-[1240px] gap-16 px-6 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:px-10">
+                      <div>
+                        <p className="eyebrow">{content.who_we_are_eyebrow || "Identity & Focus"}</p>
+                        <h2 className="mt-6 text-[2rem] leading-[1.12] font-semibold tracking-[-0.02em] text-navy lg:text-[2.75rem]">
+                          {content.who_we_are_title || "Built for the long term, measured by reliability"}
+                        </h2>
+                        <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                          {content.who_we_are_text_1 ||
+                            "We work where precision engineering meets public responsibility. Our teams deploy smart water metering, low-power IoT networks, and managed field operations for utilities and government stakeholders — programmes measured in hundreds of thousands of endpoints and decades of service life."}
+                        </p>
+                        <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                          {content.who_we_are_text_2 ||
+                            "We are deliberately structured for long-term operational resilience: in-house metrology engineering, full-time regional field teams, and supply-chain partnerships with tier-one global manufacturers. Reliability is not a feature of our work; it is the work."}
+                        </p>
+                      </div>
 
-        {/* 5. CTA */}
-        {toggles.show_cta !== false && (
-          <section className="bg-surface py-28">
-            <div className="mx-auto flex max-w-[1240px] flex-col items-start gap-8 px-6 lg:flex-row lg:items-center lg:justify-between lg:px-10">
-              <div>
-                <h2 className="text-3xl font-semibold tracking-tight text-navy">
-                  {content.cta_title || "Scope a programme with our engineers."}
-                </h2>
-                <p className="mt-3 max-w-xl text-muted-foreground">
-                  {content.cta_subtitle ||
-                    "Tell us about your infrastructure objectives and we will respond with a considered technical assessment."}
-                </p>
-              </div>
-              <Button variant="accent" size="lg" asChild>
-                <Link to={content.cta_button_link || "/contact"}>
-                  {content.cta_button_text || "Get in touch"} <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </section>
-        )}
+                      <div className="space-y-6">
+                        {principles.map((p) => (
+                          <div
+                            key={p.title}
+                            className="rounded border border-hairline bg-surface p-8 transition-shadow hover:shadow-xs"
+                          >
+                            <p.icon className="h-6 w-6 text-accent-teal" strokeWidth={1.5} />
+                            <h3 className="mt-5 text-lg font-semibold text-navy">{p.title}</h3>
+                            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.body}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                ) : null;
+
+              case "timeline":
+                return toggles.show_timeline !== false ? (
+                  <section key="timeline" className="bg-navy-deep py-28 text-navy-foreground">
+                    <div className="mx-auto max-w-[1240px] px-6 lg:px-10">
+                      <p className="text-[0.6875rem] font-semibold tracking-[0.18em] text-accent-teal uppercase">
+                        {content.timeline_eyebrow || "Company Trajectory"}
+                      </p>
+                      <h2 className="mt-4 text-[2rem] leading-[1.12] font-semibold tracking-[-0.02em] lg:text-[2.75rem]">
+                        {content.timeline_title || "A measured, disciplined expansion"}
+                      </h2>
+                      <div className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+                        {milestones.map((m) => (
+                          <div
+                            key={m.year}
+                            className="border-t border-[color-mix(in_oklab,var(--color-surface)_20%,transparent)] pt-6"
+                          >
+                            <p className="text-2xl font-semibold text-accent-teal">{m.year}</p>
+                            <p className="mt-3 text-sm leading-relaxed text-navy-foreground/75">{m.event}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                ) : null;
+
+              case "modular_blocks":
+                return <DynamicBlockRenderer key="modular_blocks" blocks={content.dynamic_blocks} />;
+
+              case "faqs":
+                return toggles.show_faqs !== false ? (
+                  <PageFaqSection
+                    key="faqs"
+                    eyebrow={content.faq_eyebrow}
+                    title={content.faq_title}
+                    subtitle={content.faq_subtitle}
+                    faqs={content.page_faqs || content.faqs}
+                  />
+                ) : null;
+
+              case "cta":
+                return toggles.show_cta !== false ? (
+                  <section key="cta" className="bg-surface py-28">
+                    <div className="mx-auto flex max-w-[1240px] flex-col items-start gap-8 px-6 lg:flex-row lg:items-center lg:justify-between lg:px-10">
+                      <div>
+                        <h2 className="text-[1.8rem] leading-[1.14] font-semibold tracking-[-0.02em] text-navy lg:text-[2.25rem]">
+                          {content.cta_title || "Explore our operating model and capabilities"}
+                        </h2>
+                        <p className="mt-3 text-base text-muted-foreground">
+                          {content.cta_subtitle ||
+                            "Learn how our field teams and telemetry platform deliver SLA-backed uptime for utilities."}
+                        </p>
+                      </div>
+                      <Button variant="accent" size="xl" asChild>
+                        <Link to={content.cta_button_link || "/services"}>
+                          {content.cta_button_text || "Our Services"} <ArrowRight />
+                        </Link>
+                      </Button>
+                    </div>
+                  </section>
+                ) : null;
+
+              default:
+                return null;
+            }
+          };
+
+          return activeSectionsOrder.map((key) => renderSection(key));
+        })()}
       </main>
 
       <SiteFooter />

@@ -21,7 +21,9 @@ class PartnerResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-building-office-2';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Site Content';
+    protected static string | UnitEnum | null $navigationGroup = 'Content Management';
+
+    protected static ?string $navigationLabel = 'Ecosystem & Partners';
 
     protected static ?int $navigationSort = 4;
 
@@ -51,7 +53,7 @@ class PartnerResource extends Resource
                             ->columnSpanFull(),
                         Components\FileUpload::make('logo')
                             ->label('Custom Logo Upload (SVG, PNG or JPG)')
-                            ->image()
+                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'])
                             ->disk('public')
                             ->directory('partners')
                             ->visibility('public')

@@ -22,7 +22,9 @@ class ContactInquiryResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-inbox-arrow-down';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Inquiries & Leads';
+    protected static string | UnitEnum | null $navigationGroup = 'Inbox & Inquiries';
+
+    protected static ?string $navigationLabel = 'Contact Inquiries';
 
     protected static ?int $navigationSort = 1;
 

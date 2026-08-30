@@ -4,6 +4,8 @@ import { Mail, MapPin, Phone, Clock, CheckCircle2, AlertCircle, Loader2 } from "
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/n3/SiteHeader";
 import { SiteFooter } from "@/components/n3/SiteFooter";
+import { PageFaqSection } from "@/components/n3/PageFaqSection";
+import { DynamicBlockRenderer } from "@/components/n3/DynamicBlockRenderer";
 import { fetchPage, fetchSiteSettings, submitContactForm, ApiPageData, getIconComponent } from "@/lib/api";
 
 export const Route = createFileRoute("/contact")({
@@ -147,128 +149,173 @@ function Contact() {
     <div id="top" className="min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main>
-        {/* 1. Hero Block */}
-        {toggles.show_hero !== false && (
-          <section className="border-b border-hairline bg-surface pt-40 pb-24">
-            <div className="mx-auto max-w-[1240px] px-6 lg:px-10">
-              <p className="text-[0.72rem] font-semibold tracking-[0.22em] text-accent-teal uppercase">
-                {content.hero_eyebrow || "Contact"}
-              </p>
-              <h1 className="mt-5 max-w-3xl text-5xl leading-[1.05] font-semibold tracking-tight text-navy lg:text-6xl">
-                {content.hero_title || "Start a conversation with our engineers."}
-              </h1>
-              <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-                {content.hero_subtitle ||
-                  "Tell us about your infrastructure objectives. We respond with a considered assessment, not a sales pitch."}
-              </p>
-            </div>
-          </section>
-        )}
+        {(() => {
+          const defaultOrder = [
+            "hero",
+            "contact_details_and_form",
+            "modular_blocks",
+            "faqs",
+            "cta",
+          ];
 
-        {/* 2. Contact Details & Form */}
-        <section className="py-28">
-          <div className="mx-auto grid max-w-[1240px] gap-16 px-6 lg:grid-cols-[1fr_1.1fr] lg:px-10">
-            {toggles.show_contact_details !== false && (
-              <div className="space-y-8">
-                {details.map((d) => (
-                  <div key={d.label} className="flex gap-4">
-                    <d.icon className="mt-1 h-5 w-5 shrink-0 text-accent-teal" strokeWidth={1.75} />
-                    <div>
-                      <p className="text-[0.6875rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-                        {d.label}
+          const activeSectionsOrder: string[] = (() => {
+            if (Array.isArray(content.sections_order) && content.sections_order.length > 0) {
+              return content.sections_order
+                .filter((item: any) => item.is_enabled !== false)
+                .map((item: any) => (typeof item === "string" ? item : item.key));
+            }
+            return defaultOrder;
+          })();
+
+          const renderSection = (key: string) => {
+            switch (key) {
+              case "hero":
+                return toggles.show_hero !== false ? (
+                  <section key="hero" className="border-b border-hairline bg-surface pt-40 pb-24">
+                    <div className="mx-auto max-w-[1240px] px-6 lg:px-10">
+                      <p className="text-[0.72rem] font-semibold tracking-[0.22em] text-accent-teal uppercase">
+                        {content.hero_eyebrow || "Contact"}
                       </p>
-                      <p className="mt-1.5 text-foreground/85">{d.value}</p>
+                      <h1 className="mt-5 max-w-3xl text-5xl leading-[1.05] font-semibold tracking-tight text-navy lg:text-6xl">
+                        {content.hero_title || "Start a conversation with our engineers."}
+                      </h1>
+                      <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                        {content.hero_subtitle ||
+                          "Tell us about your infrastructure objectives. We respond with a considered assessment, not a sales pitch."}
+                      </p>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </section>
+                ) : null;
 
-            {toggles.show_contact_form !== false && (
-              <form
-                className="rounded-xl border border-hairline bg-surface p-9 shadow-[var(--shadow-card)]"
-                onSubmit={handleSubmit}
-              >
-                {successMessage && (
-                  <div className="mb-6 flex items-start gap-3 rounded-lg border border-accent-teal/30 bg-accent-teal/10 p-4 text-accent-teal-strong">
-                    <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-accent-teal" />
-                    <p className="text-sm font-medium">{successMessage}</p>
-                  </div>
-                )}
+              case "contact_details_and_form":
+              case "contact_form":
+                return (
+                  <section key="contact_details_and_form" className="py-28">
+                    <div className="mx-auto grid max-w-[1240px] gap-16 px-6 lg:grid-cols-[1fr_1.1fr] lg:px-10">
+                      {toggles.show_contact_details !== false && (
+                        <div className="space-y-8">
+                          {details.map((d) => (
+                            <div key={d.label} className="flex gap-4">
+                              <d.icon className="mt-1 h-5 w-5 shrink-0 text-accent-teal" strokeWidth={1.75} />
+                              <div>
+                                <p className="text-[0.6875rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                                  {d.label}
+                                </p>
+                                <p className="mt-1.5 text-foreground/85">{d.value}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
-                {errorMessage && (
-                  <div className="mb-6 flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
-                    <AlertCircle className="mt-0.5 size-5 shrink-0" />
-                    <p className="text-sm font-medium">{errorMessage}</p>
-                  </div>
-                )}
+                      {toggles.show_contact_form !== false && (
+                        <form
+                          className="rounded-xl border border-hairline bg-surface p-9 shadow-[var(--shadow-card)]"
+                          onSubmit={handleSubmit}
+                        >
+                          {successMessage && (
+                            <div className="mb-6 flex items-start gap-3 rounded-lg border border-accent-teal/30 bg-accent-teal/10 p-4 text-accent-teal-strong">
+                              <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-accent-teal" />
+                              <p className="text-sm font-medium">{successMessage}</p>
+                            </div>
+                          )}
 
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <Field
-                    label="Full name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
+                          {errorMessage && (
+                            <div className="mb-6 flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+                              <AlertCircle className="mt-0.5 size-5 shrink-0" />
+                              <p className="text-sm font-medium">{errorMessage}</p>
+                            </div>
+                          )}
+
+                          <div className="grid gap-5 sm:grid-cols-2">
+                            <Field
+                              label="Full name"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleChange}
+                              required
+                            />
+                            <Field
+                              label="Organisation"
+                              name="organisation"
+                              value={formData.organisation}
+                              onChange={handleChange}
+                            />
+                            <Field
+                              label="Email"
+                              name="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={handleChange}
+                              required
+                            />
+                            <Field
+                              label="Telephone"
+                              name="phone"
+                              value={formData.phone}
+                              onChange={handleChange}
+                            />
+                          </div>
+                          <div className="mt-5">
+                            <label
+                              htmlFor="message"
+                              className="text-[0.6875rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase"
+                            >
+                              Message <span className="text-destructive">*</span>
+                            </label>
+                            <textarea
+                              id="message"
+                              name="message"
+                              rows={5}
+                              value={formData.message}
+                              onChange={handleChange}
+                              required
+                              placeholder="Scope, requirements or questions..."
+                              className="mt-2 w-full rounded-md border border-hairline bg-background px-3.5 py-2.5 text-sm outline-none transition-colors duration-200 focus:border-accent-teal"
+                            />
+                          </div>
+                          <Button
+                            variant="accent"
+                            size="lg"
+                            type="submit"
+                            className="mt-7"
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting ? (
+                              <>
+                                <Loader2 className="mr-2 size-4 animate-spin" /> Submitting...
+                              </>
+                            ) : (
+                              content.form_button_text || "Send enquiry"
+                            )}
+                          </Button>
+                        </form>
+                      )}
+                    </div>
+                  </section>
+                );
+
+              case "modular_blocks":
+                return <DynamicBlockRenderer key="modular_blocks" blocks={content.dynamic_blocks} />;
+
+              case "faqs":
+                return toggles.show_faqs !== false ? (
+                  <PageFaqSection
+                    key="faqs"
+                    eyebrow={content.faq_eyebrow}
+                    title={content.faq_title}
+                    subtitle={content.faq_subtitle}
+                    faqs={content.page_faqs || content.faqs}
                   />
-                  <Field
-                    label="Organisation"
-                    name="organisation"
-                    value={formData.organisation}
-                    onChange={handleChange}
-                  />
-                  <Field
-                    label="Email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                  />
-                  <Field
-                    label="Telephone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="mt-5">
-                  <label
-                    htmlFor="message"
-                    className="text-[0.6875rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase"
-                  >
-                    Message <span className="text-destructive">*</span>
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    rows={5}
-                    value={formData.message}
-                    onChange={handleChange}
-                    required
-                    placeholder="Scope, requirements or questions..."
-                    className="mt-2 w-full rounded-md border border-hairline bg-background px-3.5 py-2.5 text-sm outline-none transition-colors duration-200 focus:border-accent-teal"
-                  />
-                </div>
-                <Button
-                  variant="accent"
-                  size="lg"
-                  type="submit"
-                  className="mt-7"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 size-4 animate-spin" /> Submitting...
-                    </>
-                  ) : (
-                    content.form_button_text || "Send enquiry"
-                  )}
-                </Button>
-              </form>
-            )}
-          </div>
-        </section>
+                ) : null;
+
+              default:
+                return null;
+            }
+          };
+
+          return activeSectionsOrder.map((key) => renderSection(key));
+        })()}
       </main>
       <SiteFooter />
     </div>
