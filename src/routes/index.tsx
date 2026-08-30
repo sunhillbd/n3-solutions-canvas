@@ -54,6 +54,7 @@ const SOLUTIONS = [
   },
   {
     icon: Wrench,
+    slug: "field-operations",
     title: "Field Operations & Maintenance",
     body: "Deployed regional teams, asset lifecycle management and service levels held to measurable uptime targets.",
   },
