@@ -36,6 +36,7 @@ export const Route = createFileRoute("/services")({
 const SERVICES = [
   {
     icon: Gauge,
+    slug: "smart-water-metering",
     title: "Smart Water Metering",
     body: "End-to-end metering programmes — procurement, installation, commissioning and billing-grade consumption data delivered as a managed service.",
     points: [
@@ -46,6 +47,7 @@ const SERVICES = [
   },
   {
     icon: RadioTower,
+    slug: "iot-infrastructure",
     title: "IoT Infrastructure",
     body: "Low-power wide-area networks, gateways and telemetry platforms engineered for utility-grade reliability and multi-decade service life.",
     points: [
@@ -56,6 +58,7 @@ const SERVICES = [
   },
   {
     icon: Wrench,
+    slug: "field-operations",
     title: "Field Operations & Maintenance",
     body: "Deployed regional teams, asset lifecycle management and service levels held to measurable, contractual uptime targets.",
     points: [
@@ -66,6 +69,7 @@ const SERVICES = [
   },
   {
     icon: CircuitBoard,
+    slug: "emerging-technologies",
     title: "Emerging Technologies",
     body: "Structured evaluation and piloting of new sensing, connectivity and data technologies — adopted only when they are proven in the field.",
     points: [
@@ -103,7 +107,8 @@ function Services() {
             {SERVICES.map((s) => (
               <article
                 key={s.title}
-                className="rounded-xl border border-hairline bg-surface p-9 shadow-[var(--shadow-card)]"
+                id={s.slug}
+                className="scroll-mt-28 rounded-xl border border-hairline bg-surface p-9 shadow-[var(--shadow-card)]"
               >
                 <s.icon className="h-7 w-7 text-accent-teal" strokeWidth={1.75} />
                 <h2 className="mt-5 text-2xl font-semibold tracking-tight text-navy">

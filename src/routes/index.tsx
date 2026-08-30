@@ -42,21 +42,25 @@ const STATS = [
 const SOLUTIONS = [
   {
     icon: Gauge,
+    slug: "smart-water-metering",
     title: "Smart Water Metering",
     body: "End-to-end metering programmes — from procurement and installation to billing-grade consumption data.",
   },
   {
     icon: RadioTower,
+    slug: "iot-infrastructure",
     title: "IoT Infrastructure",
     body: "Low-power wide-area networks, gateways and telemetry platforms engineered for utility-grade reliability.",
   },
   {
     icon: Wrench,
+    slug: "field-operations",
     title: "Field Operations & Maintenance",
     body: "Deployed regional teams, asset lifecycle management and service levels held to measurable uptime targets.",
   },
   {
     icon: CircuitBoard,
+    slug: "emerging-technologies",
     title: "Emerging Technologies",
     body: "Applied research into energy, mobility and environmental sensing as our infrastructure platform extends.",
   },
@@ -106,27 +110,117 @@ function Home() {
             className="pointer-events-none absolute top-0 right-0 h-full w-1/3 bg-gradient-to-b from-transparent via-transparent to-[color-mix(in_oklab,var(--color-accent-teal)_6%,transparent)]"
             aria-hidden="true"
           />
-          <div className="relative mx-auto max-w-[1240px] px-6 lg:px-10">
-            <SectionLabel>N3 Solutions Limited</SectionLabel>
-            <h1 className="mt-7 max-w-4xl text-[2.6rem] leading-[1.05] font-semibold tracking-[-0.025em] text-navy sm:text-5xl lg:text-[4rem]">
-              Engineering the infrastructure behind smarter cities
-            </h1>
-            <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              We design, deploy and maintain metering and IoT infrastructure for utilities and
-              public institutions — measured, connected and built to run at national scale.
-            </p>
-            <div className="mt-11 flex flex-wrap items-center gap-5">
-              <Button variant="accent" size="xl" asChild>
-                <a href="#contact">
-                  Start a conversation <ArrowRight />
+          <div className="relative mx-auto grid max-w-[1240px] gap-16 px-6 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:px-10">
+            <div>
+              <SectionLabel>N3 Solutions Limited</SectionLabel>
+              <h1 className="mt-7 max-w-4xl text-[2.6rem] leading-[1.05] font-semibold tracking-[-0.025em] text-navy sm:text-5xl lg:text-[3.75rem]">
+                Engineering the infrastructure behind smarter cities
+              </h1>
+              <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                We design, deploy and maintain metering and IoT infrastructure for utilities and
+                public institutions — measured, connected and built to run at national scale.
+              </p>
+              <div className="mt-11 flex flex-wrap items-center gap-5">
+                <Button variant="accent" size="xl" asChild>
+                  <a href="#contact">
+                    Start a conversation <ArrowRight />
+                  </a>
+                </Button>
+                <a
+                  href="#solutions"
+                  className="text-sm font-medium tracking-[0.04em] text-navy underline-offset-8 transition-colors duration-200 hover:text-accent-teal hover:underline"
+                >
+                  Explore our capabilities
                 </a>
-              </Button>
-              <a
-                href="#solutions"
-                className="text-sm font-medium tracking-[0.04em] text-navy underline-offset-8 transition-colors duration-200 hover:text-accent-teal hover:underline"
-              >
-                Explore our capabilities
-              </a>
+              </div>
+            </div>
+
+            {/* Animated network visual */}
+            <div className="relative hidden lg:block" aria-hidden="true">
+              <div className="rule-grid animate-float-slow relative aspect-[5/6] max-h-[540px] w-full overflow-hidden border border-hairline bg-surface-muted/40">
+                <svg
+                  viewBox="0 0 400 480"
+                  fill="none"
+                  className="absolute inset-0 h-full w-full"
+                  preserveAspectRatio="xMidYMid slice"
+                >
+                  {/* connection lines — slow dash drift */}
+                  <g
+                    stroke="var(--color-accent-teal)"
+                    strokeOpacity="0.35"
+                    strokeWidth="1"
+                    strokeDasharray="4 8"
+                    className="animate-line-dash"
+                  >
+                    <path d="M60 120 L200 200 L340 90" />
+                    <path d="M200 200 L120 360" />
+                    <path d="M200 200 L300 330 L340 90" />
+                    <path d="M120 360 L300 330" />
+                    <path d="M60 120 L200 40 L340 90" />
+                  </g>
+                  {/* pulsing nodes */}
+                  <g fill="var(--color-accent-teal)">
+                    <circle cx="60" cy="120" r="4" className="animate-node-pulse" />
+                    <circle
+                      cx="200"
+                      cy="200"
+                      r="5"
+                      className="animate-node-pulse"
+                      style={{ animationDelay: "0.6s" }}
+                    />
+                    <circle
+                      cx="340"
+                      cy="90"
+                      r="4"
+                      className="animate-node-pulse"
+                      style={{ animationDelay: "1.2s" }}
+                    />
+                    <circle
+                      cx="120"
+                      cy="360"
+                      r="4"
+                      className="animate-node-pulse"
+                      style={{ animationDelay: "1.8s" }}
+                    />
+                    <circle
+                      cx="300"
+                      cy="330"
+                      r="4"
+                      className="animate-node-pulse"
+                      style={{ animationDelay: "2.4s" }}
+                    />
+                    <circle
+                      cx="200"
+                      cy="40"
+                      r="3"
+                      className="animate-node-pulse"
+                      style={{ animationDelay: "3s" }}
+                    />
+                  </g>
+                  {/* node rings */}
+                  <g stroke="var(--color-navy)" strokeOpacity="0.18" strokeWidth="1">
+                    <circle cx="200" cy="200" r="14" />
+                    <circle cx="200" cy="200" r="26" />
+                  </g>
+                </svg>
+
+                {/* telemetry readouts */}
+                <div className="absolute bottom-6 left-6 flex items-center gap-2.5">
+                  <span className="size-1.5 rounded-full bg-accent-teal animate-node-pulse" />
+                  <span className="text-[0.65rem] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                    Node 412 — online
+                  </span>
+                </div>
+                <div className="absolute top-6 right-6 flex items-center gap-2.5">
+                  <span
+                    className="size-1.5 rounded-full bg-accent-teal animate-node-pulse"
+                    style={{ animationDelay: "1.4s" }}
+                  />
+                  <span className="text-[0.65rem] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                    Telemetry live
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -158,10 +252,10 @@ function Home() {
             </div>
 
             <div className="mt-16 grid gap-px border border-hairline bg-hairline md:grid-cols-2 lg:grid-cols-4">
-              {SOLUTIONS.map(({ icon: Icon, title, body }) => (
+              {SOLUTIONS.map(({ icon: Icon, title, body, slug }) => (
                 <article
                   key={title}
-                  className="group bg-surface p-9 transition-shadow duration-300 ease-out hover:shadow-[0_18px_40px_-28px_color-mix(in_oklab,var(--navy)_60%,transparent)]"
+                  className="group flex flex-col bg-surface p-9 transition-shadow duration-300 ease-out hover:shadow-[0_18px_40px_-28px_color-mix(in_oklab,var(--navy)_60%,transparent)]"
                 >
                   <Icon
                     strokeWidth={1.25}
@@ -171,6 +265,12 @@ function Home() {
                     {title}
                   </h3>
                   <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{body}</p>
+                  <a
+                    href={`/services#${slug}`}
+                    className="mt-8 inline-flex items-center gap-2 pt-2 text-sm font-medium text-accent-teal transition-colors duration-200 group-hover:gap-3 hover:text-accent-teal-strong"
+                  >
+                    Learn more <ArrowRight className="size-4" strokeWidth={1.5} />
+                  </a>
                 </article>
               ))}
             </div>

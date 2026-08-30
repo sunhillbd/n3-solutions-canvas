@@ -177,3 +177,31 @@
     color: var(--color-foreground);
   }
 }
+
+@keyframes n3-pulse {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.4); }
+}
+
+@keyframes n3-dash {
+  to { stroke-dashoffset: -240; }
+}
+
+@keyframes n3-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@utility animate-node-pulse {
+  animation: n3-pulse 3.2s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+@utility animate-line-dash {
+  animation: n3-dash 16s linear infinite;
+}
+
+@utility animate-float-slow {
+  animation: n3-float 7s ease-in-out infinite;
+}
