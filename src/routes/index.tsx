@@ -252,10 +252,10 @@ function Home() {
             </div>
 
             <div className="mt-16 grid gap-px border border-hairline bg-hairline md:grid-cols-2 lg:grid-cols-4">
-              {SOLUTIONS.map(({ icon: Icon, title, body }) => (
+              {SOLUTIONS.map(({ icon: Icon, title, body, slug }) => (
                 <article
                   key={title}
-                  className="group bg-surface p-9 transition-shadow duration-300 ease-out hover:shadow-[0_18px_40px_-28px_color-mix(in_oklab,var(--navy)_60%,transparent)]"
+                  className="group flex flex-col bg-surface p-9 transition-shadow duration-300 ease-out hover:shadow-[0_18px_40px_-28px_color-mix(in_oklab,var(--navy)_60%,transparent)]"
                 >
                   <Icon
                     strokeWidth={1.25}
@@ -265,6 +265,12 @@ function Home() {
                     {title}
                   </h3>
                   <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{body}</p>
+                  <a
+                    href={`/services#${slug}`}
+                    className="mt-8 inline-flex items-center gap-2 pt-2 text-sm font-medium text-accent-teal transition-colors duration-200 group-hover:gap-3 hover:text-accent-teal-strong"
+                  >
+                    Learn more <ArrowRight className="size-4" strokeWidth={1.5} />
+                  </a>
                 </article>
               ))}
             </div>
