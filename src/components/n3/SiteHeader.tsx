@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Logo } from "./Logo";
 
 const NAV = [
-  { label: "Solutions", href: "#solutions" },
-  { label: "Industries", href: "#industries" },
-  { label: "About", href: "#about" },
-  { label: "News", href: "#news" },
-  { label: "Team", href: "#team" },
-  { label: "Contact", href: "#contact" },
+  { label: "Home", to: "/" as const },
+  { label: "About", to: "/about" as const },
+  { label: "Services", to: "/services" as const },
+  { label: "Contact", to: "/contact" as const },
 ];
 
 export function SiteHeader() {
@@ -30,24 +29,27 @@ export function SiteHeader() {
       }`}
     >
       <div className="mx-auto flex h-20 max-w-[1240px] items-center justify-between px-6 lg:px-10">
-        <a href="#top" aria-label="N3 Solutions Limited home">
+        <Link to="/" aria-label="N3 Solutions Limited home">
           <Logo />
-        </a>
+        </Link>
 
         <nav className="hidden items-center gap-9 lg:flex" aria-label="Primary">
           {NAV.map((item) => (
-            <a
+            <Link
               key={item.label}
-              href={item.href}
-              className="text-[0.82rem] font-medium tracking-[0.04em] text-navy/75 transition-colors duration-200 hover:text-accent-teal"
+              to={item.to}
+              activeProps={{ className: "text-accent-teal" }}
+              inactiveProps={{ className: "text-navy/75" }}
+              activeOptions={{ exact: item.to === "/" }}
+              className="text-[0.82rem] font-medium tracking-[0.04em] transition-colors duration-200 hover:text-accent-teal"
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
         <Button variant="accent" size="lg" asChild className="hidden sm:inline-flex">
-          <a href="#contact">Talk to us</a>
+          <Link to="/contact">Talk to us</Link>
         </Button>
       </div>
     </header>
