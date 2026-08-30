@@ -42,6 +42,7 @@ const STATS = [
 const SOLUTIONS = [
   {
     icon: Gauge,
+    slug: "smart-water-metering",
     title: "Smart Water Metering",
     body: "End-to-end metering programmes — from procurement and installation to billing-grade consumption data.",
   },
