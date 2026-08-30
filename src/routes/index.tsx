@@ -48,6 +48,7 @@ const SOLUTIONS = [
   },
   {
     icon: RadioTower,
+    slug: "iot-infrastructure",
     title: "IoT Infrastructure",
     body: "Low-power wide-area networks, gateways and telemetry platforms engineered for utility-grade reliability.",
   },
