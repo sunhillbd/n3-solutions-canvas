@@ -178,30 +178,93 @@
   }
 }
 
-@keyframes n3-pulse {
-  0%, 100% { opacity: 0.25; transform: scale(1); }
-  50% { opacity: 0.9; transform: scale(1.4); }
+@keyframes subtle-flow {
+  to {
+    stroke-dashoffset: -144;
+  }
 }
 
-@keyframes n3-dash {
-  to { stroke-dashoffset: -240; }
+@keyframes subtle-radar {
+  0% {
+    transform: scale(0.35);
+    opacity: 0.55;
+  }
+  60% {
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
 }
 
-@keyframes n3-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+@keyframes subtle-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
-@utility animate-node-pulse {
-  animation: n3-pulse 3.2s ease-in-out infinite;
+@keyframes subtle-wave {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-60px);
+  }
+}
+
+@keyframes subtle-wave-alt {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(60px);
+  }
+}
+
+@keyframes subtle-scan {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.65;
+  }
+  70% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translateX(450%);
+    opacity: 0;
+  }
+}
+
+@utility animate-subtle-flow {
+  animation: subtle-flow 18s linear infinite;
+}
+
+@utility animate-subtle-radar {
+  animation: subtle-radar 4.2s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
   transform-origin: center;
   transform-box: fill-box;
 }
 
-@utility animate-line-dash {
-  animation: n3-dash 16s linear infinite;
+@utility animate-subtle-pulse {
+  animation: subtle-pulse 3.5s ease-in-out infinite;
 }
 
-@utility animate-float-slow {
-  animation: n3-float 7s ease-in-out infinite;
+@utility animate-subtle-wave {
+  animation: subtle-wave 12s linear infinite;
+}
+
+@utility animate-subtle-wave-alt {
+  animation: subtle-wave-alt 16s linear infinite;
+}
+
+@utility animate-subtle-scan {
+  animation: subtle-scan 7s ease-in-out infinite;
 }

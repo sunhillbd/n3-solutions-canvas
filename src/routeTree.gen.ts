@@ -12,7 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as AboutIndexRouteImport } from './routes/about.index'
+import { Route as AboutMissionVisionRouteImport } from './routes/about.mission-vision'
+import { Route as AboutTeamRouteImport } from './routes/about.team'
+import { Route as ServicesIndexRouteImport } from './routes/services.index'
+import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,44 +35,120 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PartnersRoute = PartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutIndexRoute = AboutIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AboutRoute,
+} as any)
+const AboutMissionVisionRoute = AboutMissionVisionRouteImport.update({
+  id: '/mission-vision',
+  path: '/mission-vision',
+  getParentRoute: () => AboutRoute,
+} as any)
+const AboutTeamRoute = AboutTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AboutRoute,
+} as any)
+const ServicesIndexRoute = ServicesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ServicesRoute,
+} as any)
+const ServicesSlugRoute = ServicesSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ServicesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/about': typeof AboutRouteWithChildren
   '/contact': typeof ContactRoute
-  '/services': typeof ServicesRoute
+  '/partners': typeof PartnersRoute
+  '/services': typeof ServicesRouteWithChildren
+  '/about/mission-vision': typeof AboutMissionVisionRoute
+  '/about/team': typeof AboutTeamRoute
+  '/services/$slug': typeof ServicesSlugRoute
+  '/about/': typeof AboutIndexRoute
+  '/services/': typeof ServicesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
-  '/services': typeof ServicesRoute
+  '/partners': typeof PartnersRoute
+  '/about/mission-vision': typeof AboutMissionVisionRoute
+  '/about/team': typeof AboutTeamRoute
+  '/services/$slug': typeof ServicesSlugRoute
+  '/about': typeof AboutIndexRoute
+  '/services': typeof ServicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/about': typeof AboutRouteWithChildren
   '/contact': typeof ContactRoute
-  '/services': typeof ServicesRoute
+  '/partners': typeof PartnersRoute
+  '/services': typeof ServicesRouteWithChildren
+  '/about/mission-vision': typeof AboutMissionVisionRoute
+  '/about/team': typeof AboutTeamRoute
+  '/services/$slug': typeof ServicesSlugRoute
+  '/about/': typeof AboutIndexRoute
+  '/services/': typeof ServicesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/contact' | '/services'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/partners'
+    | '/services'
+    | '/about/mission-vision'
+    | '/about/team'
+    | '/services/$slug'
+    | '/about/'
+    | '/services/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/contact' | '/services'
-  id: '__root__' | '/' | '/about' | '/contact' | '/services'
+  to:
+    | '/'
+    | '/contact'
+    | '/partners'
+    | '/about/mission-vision'
+    | '/about/team'
+    | '/services/$slug'
+    | '/about'
+    | '/services'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/partners'
+    | '/services'
+    | '/about/mission-vision'
+    | '/about/team'
+    | '/services/$slug'
+    | '/about/'
+    | '/services/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
+  AboutRoute: typeof AboutRouteWithChildren
   ContactRoute: typeof ContactRoute
-  ServicesRoute: typeof ServicesRoute
+  PartnersRoute: typeof PartnersRoute
+  ServicesRoute: typeof ServicesRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -92,6 +174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/partners': {
+      id: '/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services': {
       id: '/services'
       path: '/services'
@@ -99,14 +188,78 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about/': {
+      id: '/about/'
+      path: '/'
+      fullPath: '/about/'
+      preLoaderRoute: typeof AboutIndexRouteImport
+      parentRoute: typeof AboutRoute
+    }
+    '/about/mission-vision': {
+      id: '/about/mission-vision'
+      path: '/mission-vision'
+      fullPath: '/about/mission-vision'
+      preLoaderRoute: typeof AboutMissionVisionRouteImport
+      parentRoute: typeof AboutRoute
+    }
+    '/about/team': {
+      id: '/about/team'
+      path: '/team'
+      fullPath: '/about/team'
+      preLoaderRoute: typeof AboutTeamRouteImport
+      parentRoute: typeof AboutRoute
+    }
+    '/services/': {
+      id: '/services/'
+      path: '/'
+      fullPath: '/services/'
+      preLoaderRoute: typeof ServicesIndexRouteImport
+      parentRoute: typeof ServicesRoute
+    }
+    '/services/$slug': {
+      id: '/services/$slug'
+      path: '/$slug'
+      fullPath: '/services/$slug'
+      preLoaderRoute: typeof ServicesSlugRouteImport
+      parentRoute: typeof ServicesRoute
+    }
   }
 }
 
+interface AboutRouteChildren {
+  AboutMissionVisionRoute: typeof AboutMissionVisionRoute
+  AboutTeamRoute: typeof AboutTeamRoute
+  AboutIndexRoute: typeof AboutIndexRoute
+}
+
+const AboutRouteChildren: AboutRouteChildren = {
+  AboutMissionVisionRoute: AboutMissionVisionRoute,
+  AboutTeamRoute: AboutTeamRoute,
+  AboutIndexRoute: AboutIndexRoute,
+}
+
+const AboutRouteWithChildren = AboutRoute._addFileChildren(AboutRouteChildren)
+
+interface ServicesRouteChildren {
+  ServicesSlugRoute: typeof ServicesSlugRoute
+  ServicesIndexRoute: typeof ServicesIndexRoute
+}
+
+const ServicesRouteChildren: ServicesRouteChildren = {
+  ServicesSlugRoute: ServicesSlugRoute,
+  ServicesIndexRoute: ServicesIndexRoute,
+}
+
+const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
+  ServicesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
+  AboutRoute: AboutRouteWithChildren,
   ContactRoute: ContactRoute,
-  ServicesRoute: ServicesRoute,
+  PartnersRoute: PartnersRoute,
+  ServicesRoute: ServicesRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
