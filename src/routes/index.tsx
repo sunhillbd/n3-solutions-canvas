@@ -60,6 +60,7 @@ const SOLUTIONS = [
   },
   {
     icon: CircuitBoard,
+    slug: "emerging-technologies",
     title: "Emerging Technologies",
     body: "Applied research into energy, mobility and environmental sensing as our infrastructure platform extends.",
   },
