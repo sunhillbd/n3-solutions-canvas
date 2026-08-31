@@ -10,7 +10,7 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class LatestInquiriesWidget extends BaseWidget
 {
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 3;
 
     protected int | string | array $columnSpan = 'full';
 
@@ -22,6 +22,9 @@ class LatestInquiriesWidget extends BaseWidget
             ->query(
                 ContactInquiry::query()->latest()->limit(5)
             )
+            ->emptyStateHeading('No contact inquiries yet')
+            ->emptyStateDescription('New messages and engineering inquiries submitted through the website contact form will appear here.')
+            ->emptyStateIcon('heroicon-o-inbox')
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Received')

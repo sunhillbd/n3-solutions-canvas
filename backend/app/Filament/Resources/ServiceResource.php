@@ -35,6 +35,7 @@ class ServiceResource extends Resource
             ->components([
                 Tabs::make('Service Details')
                     ->extraAttributes(['class' => 'vertical-section-tabs'])
+                    ->contained(false)
                     ->tabs([
                         Tabs\Tab::make('General Overview')
                             ->icon('heroicon-o-information-circle')
@@ -96,6 +97,7 @@ class ServiceResource extends Resource
                             ->schema([
                                 Components\Repeater::make('metrics')
                                     ->label('Key Stat Metrics (4 Columns)')
+                                    ->addActionLabel('Add Metric')
                                     ->schema([
                                         Components\TextInput::make('value')->label('Metric Value (e.g. 860,000+)')->required(),
                                         Components\TextInput::make('label')->label('Metric Label (e.g. Addressable Endpoints)')->required(),
@@ -111,6 +113,7 @@ class ServiceResource extends Resource
                             ->schema([
                                 Components\Repeater::make('pillars')
                                     ->label('Core System Architecture Pillars')
+                                    ->addActionLabel('Add Pillar')
                                     ->schema([
                                         Components\TextInput::make('number')->label('Step Tag (e.g. 01)')->default('01'),
                                         Components\TextInput::make('title')->label('Pillar Title')->required(),
@@ -130,6 +133,7 @@ class ServiceResource extends Resource
                             ->schema([
                                 Components\Repeater::make('lifecycle_phases')
                                     ->label('Turnkey Delivery Lifecycle Stages')
+                                    ->addActionLabel('Add Lifecycle Phase')
                                     ->schema([
                                         Components\TextInput::make('step')->label('Phase Number (e.g. 01)')->default('01'),
                                         Components\TextInput::make('phase')->label('Phase Name')->required(),
@@ -146,6 +150,7 @@ class ServiceResource extends Resource
                             ->schema([
                                 Components\Repeater::make('faqs')
                                     ->label('Service-Specific FAQs')
+                                    ->addActionLabel('Add FAQ')
                                     ->schema([
                                         Components\TextInput::make('question')->label('Question')->required(),
                                         Components\Textarea::make('answer')->label('Engineering Answer')->rows(3)->required(),
@@ -175,6 +180,9 @@ class ServiceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('No engineering disciplines found')
+            ->emptyStateDescription('Create utility infrastructure disciplines to showcase on the public website.')
+            ->emptyStateIcon('heroicon-o-cpu-chip')
             ->columns([
                 Tables\Columns\TextColumn::make('title')
                     ->label('Discipline Title')
@@ -188,10 +196,12 @@ class ServiceResource extends Resource
                 Tables\Columns\TextColumn::make('badge')
                     ->label('Metrology / Class')
                     ->badge()
-                    ->color('success'),
-                Tables\Columns\IconColumn::make('is_published')
-                    ->label('Live')
-                    ->boolean()
+                    ->color('teal'),
+                Tables\Columns\TextColumn::make('is_published')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (bool $state): string => $state ? 'success' : 'gray')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Published' : 'Draft')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label('Order')
@@ -199,7 +209,7 @@ class ServiceResource extends Resource
             ])
             ->defaultSort('sort_order', 'asc')
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_published')->label('Live Status'),
+                Tables\Filters\TernaryFilter::make('is_published')->label('Published Status'),
             ])
             ->actions([
                 EditAction::make(),
@@ -218,6 +228,12 @@ class ServiceResource extends Resource
                         $clone->slug = $data['new_slug'];
                         $clone->save();
                     }),
+                Action::make('view_live')
+                    ->label('View')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->color('gray')
+                    ->url(fn (Service $record): string => rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/') . '/services/' . $record->slug)
+                    ->openUrlInNewTab(),
                 DeleteAction::make(),
             ]);
     }

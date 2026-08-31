@@ -71,6 +71,9 @@ class FaqResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('No FAQs found')
+            ->emptyStateDescription('Create frequently asked questions for the homepage or specific utility discipline pages.')
+            ->emptyStateIcon('heroicon-o-question-mark-circle')
             ->columns([
                 Tables\Columns\TextColumn::make('question')
                     ->label('Question')
@@ -79,19 +82,26 @@ class FaqResource extends Resource
                     ->weight('bold')
                     ->limit(60),
                 Tables\Columns\TextColumn::make('placement')
-                    ->label('Placement')
+                    ->label('Placement Area')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'homepage' => 'primary',
+                        'homepage' => 'teal',
                         'service_specific' => 'info',
                         default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'homepage' => 'Homepage FAQ',
+                        'service_specific' => 'Service Discipline',
+                        default => 'General FAQ',
                     }),
                 Tables\Columns\TextColumn::make('service.title')
-                    ->label('Linked Service')
+                    ->label('Linked Discipline')
                     ->placeholder('None (Global)'),
-                Tables\Columns\IconColumn::make('is_published')
-                    ->label('Live')
-                    ->boolean(),
+                Tables\Columns\TextColumn::make('is_published')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (bool $state): string => $state ? 'success' : 'gray')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Published' : 'Draft'),
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label('Order')
                     ->sortable(),

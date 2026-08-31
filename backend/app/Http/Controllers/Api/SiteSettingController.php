@@ -49,6 +49,9 @@ class SiteSettingController extends Controller
         if (isset($payload['logo'])) {
             $payload['logo_url'] = MediaHelper::url($payload['logo']);
         }
+        if (isset($payload['logo_dark'])) {
+            $payload['logo_dark_url'] = MediaHelper::url($payload['logo_dark']);
+        }
         if (isset($payload['favicon'])) {
             $payload['favicon_url'] = MediaHelper::url($payload['favicon']);
         }
@@ -57,6 +60,9 @@ class SiteSettingController extends Controller
         }
         if (isset($payload['seo']['og_image'])) {
             $payload['seo']['og_image_url'] = MediaHelper::url($payload['seo']['og_image']);
+        }
+        if (isset($payload['default_seo']['og_image'])) {
+            $payload['default_seo']['og_image_url'] = MediaHelper::url($payload['default_seo']['og_image']);
         }
 
         return $payload;

@@ -27,9 +27,12 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('N3 Solutions Admin')
+            ->brandLogo(fn () => view('filament.components.brand-logo'))
+            ->brandLogoHeight('2.25rem')
+            ->font('Inter')
             ->colors([
                 'primary' => Color::Teal,
+                'gray' => Color::Slate,
             ])
             ->sidebarCollapsibleOnDesktop()
             ->renderHook(
@@ -42,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->userMenuItems([
                 \Filament\Navigation\MenuItem::make()
-                    ->label('Go to the website')
+                    ->label('Go to live website')
                     ->url(env('FRONTEND_URL', 'http://localhost:5173/'))
                     ->openUrlInNewTab()
                     ->icon('heroicon-o-arrow-top-right-on-square'),
@@ -54,11 +57,12 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 'Content Management',
-                'Website & Navigation',
+                'Website & Branding',
                 'Inbox & Inquiries',
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
+                \App\Filament\Widgets\QuickActionsWidget::class,
                 \App\Filament\Widgets\StatsOverviewWidget::class,
                 \App\Filament\Widgets\LatestInquiriesWidget::class,
             ])

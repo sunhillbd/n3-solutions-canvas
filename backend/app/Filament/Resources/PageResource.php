@@ -10,6 +10,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components;
+use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Schema;
@@ -39,6 +40,7 @@ class PageResource extends Resource
             ->components([
                 Tabs::make('Page Sections Management')
                     ->extraAttributes(['class' => 'vertical-section-tabs'])
+                    ->contained(false)
                     ->tabs([
                         // 1. GENERAL IDENTITY & TEMPLATE
                         Tabs\Tab::make('General')
@@ -47,8 +49,8 @@ class PageResource extends Resource
                                 Section::make('Page Identity & Routing')
                                     ->description('Basic page title, URL routing slug, and layout template.')
                                     ->schema([
-                                        Components\TextInput::make('title')
-                                            ->label('PAGE TITLE')
+                                         Components\TextInput::make('title')
+                                            ->label('Page Title')
                                             ->required()
                                             ->maxLength(255)
                                             ->live(onBlur: true)
@@ -58,12 +60,12 @@ class PageResource extends Resource
                                                 }
                                             }),
                                         Components\TextInput::make('slug')
-                                            ->label('URL SLUG / ROUTE PATH')
+                                            ->label('URL Slug / Route Path')
                                             ->required()
                                             ->unique(Page::class, 'slug', ignoreRecord: true)
                                             ->helperText('e.g. "about", "partners", "contact", or "/" for homepage.'),
                                         Components\Select::make('template')
-                                            ->label('PAGE TEMPLATE')
+                                            ->label('Page Template')
                                             ->options([
                                                 'home' => 'Homepage Layout',
                                                 'about' => 'About Us Overview',
@@ -81,7 +83,7 @@ class PageResource extends Resource
                                             ->default(true)
                                             ->inline(false),
                                         Components\TextInput::make('sort_order')
-                                            ->label('SORT ORDER')
+                                            ->label('Sort Order')
                                             ->numeric()
                                             ->default(0),
                                     ])->columns(2),
@@ -93,25 +95,25 @@ class PageResource extends Resource
                             ->schema([
                                 Section::make('SEO & AEO')
                                     ->description('Search engine and AI answer engine settings for this page.')
-                                    ->schema([
+                                    ->afterHeader([
                                         Components\Toggle::make('section_toggles.show_seo_aeo')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false)
-                                            ->helperText('Enable customized SEO meta tags and AEO citations for this page.'),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
                                         Components\TextInput::make('seo.meta_title')
-                                            ->label('PAGE TITLE')
+                                            ->label('SEO Meta Title')
                                             ->helperText('Shown in the browser tab and search results. Leave blank to use the site-wide default.'),
                                         Components\Textarea::make('seo.meta_description')
-                                            ->label('META DESCRIPTION')
+                                            ->label('Meta Description')
                                             ->rows(3)
                                             ->helperText('Around 150–160 characters work best for search result snippets. Leave blank to use the site-wide default.'),
                                         Components\TagsInput::make('seo.meta_keywords')
-                                            ->label('META KEYWORDS')
+                                            ->label('Meta Keywords')
                                             ->placeholder('Add keywords (comma separated)')
                                             ->helperText('Leave blank to use the site-wide default.'),
                                         Components\FileUpload::make('seo.og_image')
-                                            ->label('SOCIAL SHARE IMAGE')
+                                            ->label('Social Share Image')
                                             ->image()
                                             ->disk('public')
                                             ->directory('seo')
@@ -121,18 +123,19 @@ class PageResource extends Resource
                                             ->imageCropAspectRatio('1200:630')
                                             ->helperText('Click or drag image here to upload. SVG, PNG, JPG or GIF (max. 5MB).'),
                                         Components\TextInput::make('seo.canonical_url')
-                                            ->label('CUSTOM CANONICAL URL')
+                                            ->label('Custom Canonical URL')
                                             ->url()
                                             ->helperText('Optional canonical URL link.'),
                                         Components\Textarea::make('aeo.direct_answer')
-                                            ->label('AI DIRECT ANSWER SNIPPET (TL;DR)')
+                                            ->label('AI Direct Answer Snippet (TL;DR)')
                                             ->rows(2)
                                             ->helperText('Concise 1–2 sentence factual summary optimized for direct quote extraction by Perplexity, ChatGPT, and AI Overviews.'),
                                         Components\TagsInput::make('aeo.key_entities')
-                                            ->label('KNOWLEDGE GRAPH ENTITIES')
+                                            ->label('Knowledge Graph Entities')
                                             ->placeholder('Add entity (e.g. Smart Water Metering, Dhaka WASA, LoRaWAN)'),
                                         Components\Repeater::make('aeo.facts_keypoints')
-                                            ->label('FACTUAL Q&A RETRIEVAL KEYPOINTS')
+                                            ->label('Factual Q&A Retrieval Keypoints')
+                                            ->addActionLabel('Add Q&A Keypoint')
                                             ->schema([
                                                 Components\TextInput::make('fact_question')->label('Fact Question')->required(),
                                                 Components\Textarea::make('fact_answer')->label('Factual Direct Answer')->rows(2)->required(),
@@ -149,6 +152,7 @@ class PageResource extends Resource
                                     ->schema([
                                         Components\Repeater::make('content.sections_order')
                                             ->label('Page Sections Sequence (Drag items to reorder)')
+                                            ->addActionLabel('Add Section')
                                             ->schema([
                                                 Components\Select::make('key')
                                                     ->label('Section Name & Type')
@@ -225,33 +229,39 @@ class PageResource extends Resource
                         Tabs\Tab::make('Header & Announcement')
                             ->icon('heroicon-o-bars-3')
                             ->schema([
-                                Section::make('Announcement Bar')
+                                 Section::make('Announcement Bar')
                                     ->description('The thin banner strip above the navigation.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('announcement', 'Announcement Bar'),
                                         Components\Toggle::make('section_toggles.show_announcement_bar')
                                             ->label('On the page')
-                                            ->default(false)
-                                            ->inline(false),
+                                            ->default(false),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('announcement'),
                                         Components\TextInput::make('content.announcement_text')
-                                            ->label('ANNOUNCEMENT TEXT')
+                                            ->label('Announcement Text')
                                             ->placeholder('e.g. Now expanding smart metering across Dhaka WASA zones'),
                                         Components\TextInput::make('content.announcement_link')
-                                            ->label('ANNOUNCEMENT LINK URL')
+                                            ->label('Announcement Link URL')
                                             ->placeholder('e.g. /services/smart-water-metering'),
                                     ])->columns(2),
 
                                 Section::make('Navigation Header CTA')
                                     ->description('The sticky header menu links and primary header action button.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('header', 'Navigation Header'),
                                         Components\Toggle::make('section_toggles.show_navigation')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('header'),
                                         Components\TextInput::make('content.nav_cta_text')
-                                            ->label('HEADER CTA BUTTON TEXT')
+                                            ->label('Header CTA Button Text')
                                             ->placeholder('Get in touch'),
                                         Components\TextInput::make('content.nav_cta_link')
-                                            ->label('HEADER CTA BUTTON LINK')
+                                            ->label('Header CTA Button Link')
                                             ->placeholder('/contact'),
                                     ])->columns(2),
                             ]),
@@ -262,33 +272,36 @@ class PageResource extends Resource
                             ->schema([
                                 Section::make('Hero')
                                     ->description('The first screen: rotating headline, intro copy, buttons and visual telemetry.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('hero', 'Hero Section'),
                                         Components\Toggle::make('section_toggles.show_hero')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('hero'),
                                         Components\TextInput::make('content.hero_eyebrow')
-                                            ->label('EYEBROW BADGE / CATEGORY')
+                                            ->label('Eyebrow Badge / Category')
                                             ->placeholder('e.g. N3 Solutions Limited or Contact Us'),
                                         Components\TextInput::make('content.hero_title')
-                                            ->label('MAIN HEADLINE')
+                                            ->label('Main Headline')
                                             ->placeholder('Engineering the infrastructure behind smarter cities')
                                             ->required(),
                                         Components\Textarea::make('content.hero_subtitle')
-                                            ->label('SUBTITLE / SUMMARY COPY')
+                                            ->label('Subtitle / Summary Copy')
                                             ->rows(3)
                                             ->placeholder('We design, deploy and maintain metering and IoT infrastructure for utilities...'),
                                         Components\TextInput::make('content.hero_cta_text')
-                                            ->label('PRIMARY BUTTON LABEL')
+                                            ->label('Primary Button Label')
                                             ->placeholder('Start a conversation'),
                                         Components\TextInput::make('content.hero_cta_link')
-                                            ->label('PRIMARY BUTTON LINK')
+                                            ->label('Primary Button Link')
                                             ->placeholder('/contact'),
                                         Components\TextInput::make('content.hero_secondary_cta_text')
-                                            ->label('SECONDARY LINK TEXT')
+                                            ->label('Secondary Link Text')
                                             ->placeholder('Explore our capabilities'),
                                         Components\TextInput::make('content.hero_secondary_cta_link')
-                                            ->label('SECONDARY LINK TARGET')
+                                            ->label('Secondary Link Target')
                                             ->placeholder('#capabilities'),
                                     ])->columns(2),
                             ]),
@@ -300,51 +313,58 @@ class PageResource extends Resource
                             ->schema([
                                 Section::make('Contact Information Block')
                                     ->description('Office location, direct email, telephone, and working hours.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('contact', 'Contact Information Block'),
                                         Components\Toggle::make('section_toggles.show_contact_details')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('contact'),
                                         Components\TextInput::make('content.office_address')
-                                            ->label('OFFICE ADDRESS')
+                                            ->label('Office Address')
                                             ->placeholder('Gulshan Avenue, Dhaka 1212, Bangladesh'),
                                         Components\TextInput::make('content.contact_email')
-                                            ->label('DIRECT INQUIRY EMAIL')
+                                            ->label('Direct Inquiry Email')
                                             ->email()
                                             ->placeholder('contact@n3solutions.com'),
                                         Components\TextInput::make('content.contact_phone')
-                                            ->label('TELEPHONE NUMBER')
+                                            ->label('Telephone Number')
                                             ->placeholder('+880 2 000 0000'),
                                         Components\TextInput::make('content.office_hours')
-                                            ->label('OFFICE HOURS')
+                                            ->label('Office Hours')
                                             ->placeholder('Sunday – Thursday: 09:00 – 18:00 (BST)'),
                                         Components\Repeater::make('content.details_list')
-                                            ->label('CUSTOM CONTACT CARDS')
+                                            ->label('Custom Contact Cards')
+                                            ->addActionLabel('Add Contact Card')
                                             ->schema([
                                                 Components\TextInput::make('label')->label('Card Label (e.g. Metrology Lab)')->required(),
                                                 Components\TextInput::make('value')->label('Card Value / Details')->required(),
                                                 Components\TextInput::make('icon')->label('Lucide Icon Name')->default('MapPin'),
-                                            ])->columns(3)->collapsible(),
+                                            ])->columns(3)->collapsible()->columnSpanFull(),
                                     ])->columns(2),
 
                                 Section::make('Inquiry Form Block')
                                     ->description('Direct engineering contact form settings.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('form', 'Inquiry Form Block'),
                                         Components\Toggle::make('section_toggles.show_contact_form')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('form'),
                                         Components\TextInput::make('content.form_title')
-                                            ->label('FORM HEADING')
+                                            ->label('Form Heading')
                                             ->placeholder('Start a conversation with our engineers.'),
                                         Components\TextInput::make('content.form_subtitle')
-                                            ->label('FORM SUBTITLE')
+                                            ->label('Form Subtitle')
                                             ->placeholder('Tell us about your infrastructure objectives.'),
                                         Components\TextInput::make('content.form_button_text')
-                                            ->label('SUBMIT BUTTON TEXT')
+                                            ->label('Submit Button Text')
                                             ->placeholder('Send enquiry'),
                                         Components\TextInput::make('content.form_success_message')
-                                            ->label('SUCCESS CONFIRMATION MESSAGE')
+                                            ->label('Success Confirmation Message')
                                             ->placeholder('Thank you. Your inquiry has been received. Our engineering team will review and respond shortly.'),
                                     ])->columns(2),
                             ]),
@@ -355,13 +375,17 @@ class PageResource extends Resource
                             ->schema([
                                 Section::make('Stats Bar')
                                     ->description('Key trust, scale and verification metrics.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('stats', 'Stats Bar'),
                                         Components\Toggle::make('section_toggles.show_stats_bar')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('stats'),
                                         Components\Repeater::make('content.stats')
-                                            ->label('STATISTICS CARDS')
+                                            ->label('Statistics Cards')
+                                            ->addActionLabel('Add Stat Card')
                                             ->schema([
                                                 Components\TextInput::make('value')->label('Metric Value (e.g. 860,000+)')->required(),
                                                 Components\TextInput::make('label')->label('Metric Label (e.g. Addressable endpoints)')->required(),
@@ -369,8 +393,9 @@ class PageResource extends Resource
                                             ])
                                             ->columns(3)
                                             ->collapsible()
-                                            ->reorderableWithButtons(),
-                                    ]),
+                                            ->reorderableWithButtons()
+                                            ->columnSpanFull(),
+                                    ])->columns(2),
                             ]),
 
                         // 7. CONTENT BLOCKS (Template specific)
@@ -381,156 +406,181 @@ class PageResource extends Resource
                                 Section::make('Capabilities Section (Homepage)')
                                     ->visible(fn ($get) => $get('template') === 'home')
                                     ->description('Four disciplines, one delivery model.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('capabilities', 'Capabilities Section'),
                                         Components\Toggle::make('section_toggles.show_capabilities')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('capabilities'),
                                         Components\TextInput::make('content.capabilities_eyebrow')
-                                            ->label('EYEBROW')
+                                            ->label('Section Eyebrow')
                                             ->placeholder('Capabilities'),
                                         Components\TextInput::make('content.capabilities_title')
-                                            ->label('HEADING')
+                                            ->label('Section Heading')
                                             ->placeholder('Four disciplines, one delivery model'),
                                     ])->columns(2),
 
                                 Section::make('About Teaser Section (Homepage)')
                                     ->visible(fn ($get) => $get('template') === 'home')
                                     ->description('National metering upgrade story with stats.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('about', 'About Teaser Section'),
                                         Components\Toggle::make('section_toggles.show_about_teaser')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('about'),
                                         Components\TextInput::make('content.about_eyebrow')
-                                            ->label('EYEBROW')
+                                            ->label('Section Eyebrow')
                                             ->placeholder('About N3 Solutions'),
                                         Components\TextInput::make('content.about_title')
-                                            ->label('HEADING')
+                                            ->label('Section Heading')
                                             ->placeholder('A national metering upgrade, delivered zone by zone'),
                                         Components\Textarea::make('content.about_text')
-                                            ->label('DESCRIPTION')
+                                            ->label('Description')
                                             ->rows(3),
                                         Components\Repeater::make('content.about_stats')
-                                            ->label('ABOUT STATS HIGHLIGHTS')
+                                            ->label('About Stats Highlights')
+                                            ->addActionLabel('Add Stat Highlight')
                                             ->schema([
                                                 Components\TextInput::make('v')->label('Value (e.g. 32%)')->required(),
                                                 Components\TextInput::make('l')->label('Label (e.g. Non-revenue water)')->required(),
-                                            ])->columns(2)->collapsible(),
+                                            ])->columns(2)->collapsible()->columnSpanFull(),
                                     ])->columns(2),
 
                                 // B. About page specific blocks
                                 Section::make('Who We Are & Operating Principles (About Us)')
                                     ->visible(fn ($get) => $get('template') === 'about')
                                     ->description('Company identity, mission focus, and core principles cards.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('who_we_are', 'Who We Are Section'),
                                         Components\Toggle::make('section_toggles.show_who_we_are')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('who_we_are'),
                                         Components\TextInput::make('content.who_we_are_eyebrow')
-                                            ->label('EYEBROW')
+                                            ->label('Section Eyebrow')
                                             ->placeholder('Identity & Focus'),
                                         Components\TextInput::make('content.who_we_are_title')
-                                            ->label('HEADING')
+                                            ->label('Section Heading')
                                             ->placeholder('Built for the long term, measured by reliability'),
                                         Components\Textarea::make('content.who_we_are_text_1')
-                                            ->label('PARAGRAPH 1')
+                                            ->label('Paragraph 1')
                                             ->rows(3),
                                         Components\Textarea::make('content.who_we_are_text_2')
-                                            ->label('PARAGRAPH 2')
+                                            ->label('Paragraph 2')
                                             ->rows(3),
                                         Components\Repeater::make('content.principles')
-                                            ->label('CORE PRINCIPLES CARDS')
+                                            ->label('Core Principles Cards')
+                                            ->addActionLabel('Add Principle Card')
                                             ->schema([
                                                 Components\TextInput::make('title')->label('Principle Title')->required(),
                                                 Components\Textarea::make('body')->label('Description')->rows(2)->required(),
                                                 Components\TextInput::make('icon')->label('Lucide Icon')->default('Compass'),
-                                            ])->columns(3)->collapsible(),
+                                            ])->columns(3)->collapsible()->columnSpanFull(),
                                     ])->columns(2),
 
                                 Section::make('Trajectory & Milestones Timeline (About Us)')
                                     ->visible(fn ($get) => $get('template') === 'about')
                                     ->description('Company trajectory and historical milestones.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('timeline', 'Trajectory & Timeline'),
                                         Components\Toggle::make('section_toggles.show_timeline')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('timeline'),
                                         Components\TextInput::make('content.timeline_eyebrow')
-                                            ->label('EYEBROW')
+                                            ->label('Section Eyebrow')
                                             ->placeholder('Company Trajectory'),
                                         Components\TextInput::make('content.timeline_title')
-                                            ->label('HEADING')
+                                            ->label('Section Heading')
                                             ->placeholder('A measured, disciplined expansion'),
                                         Components\Repeater::make('content.milestones')
-                                            ->label('MILESTONES TIMELINE')
+                                            ->label('Milestones Timeline')
+                                            ->addActionLabel('Add Milestone')
                                             ->schema([
                                                 Components\TextInput::make('year')->label('Year (e.g. 2019)')->required(),
                                                 Components\TextInput::make('event')->label('Milestone Event Summary')->required(),
-                                            ])->columns(2)->collapsible(),
+                                            ])->columns(2)->collapsible()->columnSpanFull(),
                                     ])->columns(2),
 
                                 // C. Mission & Vision specific blocks
                                 Section::make('Mission & Vision Statements')
                                     ->visible(fn ($get) => $get('template') === 'mission_vision')
                                     ->description('Twin pillars: core purpose mission and long-term vision.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('mission_vision', 'Mission & Vision Statements'),
                                         Components\Toggle::make('section_toggles.show_mission_vision_boxes')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('mission_vision'),
                                         Components\TextInput::make('content.mission_title')
-                                            ->label('MISSION TITLE')
+                                            ->label('Mission Title')
                                             ->placeholder('Our Mission'),
                                         Components\Textarea::make('content.mission_text')
-                                            ->label('MISSION STATEMENT')
+                                            ->label('Mission Statement')
                                             ->rows(3),
                                         Components\TextInput::make('content.vision_title')
-                                            ->label('VISION TITLE')
+                                            ->label('Vision Title')
                                             ->placeholder('Our Vision'),
                                         Components\Textarea::make('content.vision_text')
-                                            ->label('VISION STATEMENT')
+                                            ->label('Vision Statement')
                                             ->rows(3),
                                     ])->columns(2),
 
                                 Section::make('Core Operating Values Grid')
                                     ->visible(fn ($get) => $get('template') === 'mission_vision')
                                     ->description('Operating values that govern engineering delivery.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('values', 'Core Operating Values Grid'),
                                         Components\Toggle::make('section_toggles.show_values_grid')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('values'),
                                         Components\TextInput::make('content.values_eyebrow')
-                                            ->label('EYEBROW')
+                                            ->label('Section Eyebrow')
                                             ->placeholder('Operating Principles'),
                                         Components\TextInput::make('content.values_title')
-                                            ->label('HEADING')
+                                            ->label('Section Heading')
                                             ->placeholder('The values that govern our delivery'),
                                         Components\Repeater::make('content.values')
-                                            ->label('CORE VALUES CARDS')
+                                            ->label('Core Values Cards')
+                                            ->addActionLabel('Add Value Card')
                                             ->schema([
                                                 Components\TextInput::make('title')->label('Value Title')->required(),
                                                 Components\Textarea::make('description')->label('Description')->rows(2)->required(),
                                                 Components\TextInput::make('icon')->label('Lucide Icon')->default('Droplets'),
-                                            ])->columns(3)->collapsible(),
+                                            ])->columns(3)->collapsible()->columnSpanFull(),
                                     ])->columns(2),
 
                                 // D. Team specific blocks
                                 Section::make('Leadership & Functional Leads (Team)')
                                     ->visible(fn ($get) => in_array($get('template'), ['home', 'team']))
                                     ->description('Leadership roster and functional engineering leads.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('team', 'Leadership & Team'),
                                         Components\Toggle::make('section_toggles.show_team_teaser')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('team'),
                                         Components\TextInput::make('content.team_eyebrow')
-                                            ->label('EYEBROW')
+                                            ->label('Section Eyebrow')
                                             ->placeholder('Leadership'),
                                         Components\TextInput::make('content.team_title')
-                                            ->label('HEADING')
+                                            ->label('Section Heading')
                                             ->placeholder('Founding partners'),
                                     ])->columns(2),
 
@@ -538,16 +588,19 @@ class PageResource extends Resource
                                 Section::make('Newsroom Teaser')
                                     ->visible(fn ($get) => in_array($get('template'), ['home']))
                                     ->description('Latest press releases and technical articles.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('news', 'Newsroom Teaser'),
                                         Components\Toggle::make('section_toggles.show_newsroom')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('news'),
                                         Components\TextInput::make('content.news_eyebrow')
-                                            ->label('EYEBROW')
+                                            ->label('Section Eyebrow')
                                             ->placeholder('Newsroom'),
                                         Components\TextInput::make('content.news_title')
-                                            ->label('HEADING')
+                                            ->label('Section Heading')
                                             ->placeholder('Latest updates'),
                                     ])->columns(2),
 
@@ -556,7 +609,7 @@ class PageResource extends Resource
                                     ->visible(fn ($get) => $get('template') === 'custom')
                                     ->schema([
                                         Components\MarkdownEditor::make('content.body_content')
-                                            ->label('PAGE CONTENT BODY'),
+                                            ->label('Page Content Body'),
                                     ]),
                             ]),
 
@@ -566,23 +619,27 @@ class PageResource extends Resource
                             ->schema([
                                 Section::make('Frequently Asked Questions')
                                     ->description('Collapsible questions and answers on delivery models and technology.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('faq', 'Frequently Asked Questions'),
                                         Components\Toggle::make('section_toggles.show_faqs')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('faq'),
                                         Components\TextInput::make('content.faq_eyebrow')
-                                            ->label('EYEBROW')
+                                            ->label('Section Eyebrow')
                                             ->placeholder('Frequently Asked Questions'),
                                         Components\TextInput::make('content.faq_title')
-                                            ->label('HEADING')
+                                            ->label('Section Heading')
                                             ->placeholder('Utility infrastructure & delivery'),
                                         Components\Textarea::make('content.faq_subtitle')
-                                            ->label('SUBTITLE')
+                                            ->label('Section Subtitle')
                                             ->rows(2)
                                             ->placeholder('Key questions on our deployment models, technology specifications, and regional operational capacity.'),
                                         Components\Repeater::make('content.page_faqs')
-                                            ->label('PAGE-SPECIFIC FAQS (Custom FAQ accordion items for this page)')
+                                            ->label('Page FAQs')
+                                            ->addActionLabel('Add FAQ')
                                             ->schema([
                                                 Components\TextInput::make('question')->label('Question')->required()->columnSpan(1),
                                                 Components\Textarea::make('answer')->label('Answer')->rows(3)->required()->columnSpan(1),
@@ -601,23 +658,26 @@ class PageResource extends Resource
                             ->schema([
                                 Section::make('Call To Action (CTA)')
                                     ->description('Bottom banner prompt to get in touch or start a conversation.')
-                                    ->schema([
+                                    ->afterHeader([
+                                        static::makeSectionStylingAction('cta', 'Call To Action'),
                                         Components\Toggle::make('section_toggles.show_cta')
                                             ->label('On the page')
-                                            ->default(true)
-                                            ->inline(false),
+                                            ->default(true),
+                                    ])
+                                    ->schema([
+                                        ...static::getSectionStylingHiddenFields('cta'),
                                         Components\TextInput::make('content.cta_title')
-                                            ->label('CTA HEADLINE')
+                                            ->label('CTA Headline')
                                             ->placeholder("Let's build the infrastructure Bangladesh needs"),
                                         Components\Textarea::make('content.cta_subtitle')
-                                            ->label('CTA SUBTITLE')
+                                            ->label('CTA Subtitle')
                                             ->rows(2)
                                             ->placeholder('Speak with our team about metering programmes, network deployment and long-term operations.'),
                                         Components\TextInput::make('content.cta_button_text')
-                                            ->label('BUTTON LABEL')
+                                            ->label('Button Label')
                                             ->placeholder('Get in touch'),
                                         Components\TextInput::make('content.cta_button_link')
-                                            ->label('BUTTON LINK')
+                                            ->label('Button Link')
                                             ->placeholder('/contact'),
                                     ])->columns(2),
                             ]),
@@ -632,7 +692,7 @@ class PageResource extends Resource
                                         Components\Builder::make('content.dynamic_blocks')
                                             ->label('Modular Blocks Canvas')
                                             ->blocks([
-                                                Components\Builder\Block::make('zigzag_split')
+                                                 Components\Builder\Block::make('zigzag_split')
                                                     ->label('Zigzag / Feature Split (Image + Text)')
                                                     ->icon('heroicon-o-arrows-right-left')
                                                     ->schema([
@@ -654,6 +714,39 @@ class PageResource extends Resource
                                                                 'navy' => 'Deep Navy',
                                                             ])
                                                             ->default('surface'),
+                                                        Components\ColorPicker::make('text_color')
+                                                            ->label('Heading / Title Color')
+                                                            ->helperText('Optional custom heading color (e.g. #0B1528, #FFFFFF)'),
+                                                        Components\ColorPicker::make('desc_color')
+                                                            ->label('Description / Body Color')
+                                                            ->helperText('Optional custom body text color (e.g. #64748B, #94A3B8)'),
+                                                        Components\ColorPicker::make('background_color')
+                                                            ->label('Custom Background Color')
+                                                            ->helperText('Optional custom hex color (e.g. #0B1528, #F8FAFC)'),
+                                                        Components\FileUpload::make('background_image')
+                                                            ->label('Background Image')
+                                                            ->image()
+                                                            ->disk('public')
+                                                            ->directory('pages/blocks/backgrounds')
+                                                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                                                            ->maxSize(10240)
+                                                            ->helperText('Optional background image or texture pattern'),
+                                                        Components\Select::make('line_height')
+                                                            ->label('Line Height / Leading')
+                                                            ->options([
+                                                                'tight' => 'Tight (1.25)',
+                                                                'snug' => 'Snug (1.375)',
+                                                                'normal' => 'Normal (1.5)',
+                                                                'relaxed' => 'Relaxed (1.625)',
+                                                                'loose' => 'Loose (2.0)',
+                                                            ])
+                                                            ->default('normal'),
+                                                        Components\ColorPicker::make('btn_bg_color')
+                                                            ->label('Button Background Color')
+                                                            ->helperText('Optional CTA button background color (e.g. #0D9488)'),
+                                                        Components\ColorPicker::make('btn_text_color')
+                                                            ->label('Button Text Color')
+                                                            ->helperText('Optional CTA button text color (e.g. #FFFFFF)'),
                                                         Components\Textarea::make('body')
                                                             ->label('Body Content')
                                                             ->rows(3)
@@ -673,7 +766,7 @@ class PageResource extends Resource
                                                         Components\TextInput::make('button_link')->label('CTA Button Link')->placeholder('/services'),
                                                     ])->columns(2),
 
-                                                Components\Builder\Block::make('card_grid')
+                                                 Components\Builder\Block::make('card_grid')
                                                     ->label('Card Grid / Feature Columns')
                                                     ->icon('heroicon-o-squares-2x2')
                                                     ->schema([
@@ -697,8 +790,36 @@ class PageResource extends Resource
                                                                 'navy' => 'Deep Navy',
                                                             ])
                                                             ->default('white'),
+                                                        Components\ColorPicker::make('text_color')
+                                                            ->label('Heading / Title Color')
+                                                            ->helperText('Optional custom heading color'),
+                                                        Components\ColorPicker::make('desc_color')
+                                                            ->label('Description / Subtitle Color')
+                                                            ->helperText('Optional custom subtitle color'),
+                                                        Components\ColorPicker::make('background_color')
+                                                            ->label('Custom Background Color')
+                                                            ->helperText('Optional custom hex color (e.g. #0B1528, #F8FAFC)'),
+                                                        Components\FileUpload::make('background_image')
+                                                            ->label('Background Image')
+                                                            ->image()
+                                                            ->disk('public')
+                                                            ->directory('pages/blocks/backgrounds')
+                                                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                                                            ->maxSize(10240)
+                                                            ->helperText('Optional background image or texture pattern'),
+                                                        Components\Select::make('line_height')
+                                                            ->label('Line Height / Leading')
+                                                            ->options([
+                                                                'tight' => 'Tight (1.25)',
+                                                                'snug' => 'Snug (1.375)',
+                                                                'normal' => 'Normal (1.5)',
+                                                                'relaxed' => 'Relaxed (1.625)',
+                                                                'loose' => 'Loose (2.0)',
+                                                            ])
+                                                            ->default('normal'),
                                                         Components\Repeater::make('cards')
                                                             ->label('Cards')
+                                                            ->addActionLabel('Add Card')
                                                             ->schema([
                                                                 Components\TextInput::make('icon')->label('Lucide Icon Name')->default('Gauge')->placeholder('e.g. Gauge, RadioTower, ShieldCheck, Cpu, Droplets, Layers'),
                                                                 Components\TextInput::make('tag')->label('Top Tag')->placeholder('01 // MODULE'),
@@ -715,7 +836,7 @@ class PageResource extends Resource
                                                             ->columnSpanFull(),
                                                     ])->columns(2),
 
-                                                Components\Builder\Block::make('stats_bar')
+                                                 Components\Builder\Block::make('stats_bar')
                                                     ->label('Metrics & Stats Bar')
                                                     ->icon('heroicon-o-chart-bar')
                                                     ->schema([
@@ -730,13 +851,41 @@ class PageResource extends Resource
                                                                 'white' => 'Clean White',
                                                             ])
                                                             ->default('surface_muted'),
+                                                        Components\ColorPicker::make('text_color')
+                                                            ->label('Heading / Value Color')
+                                                            ->helperText('Optional custom text color'),
+                                                        Components\ColorPicker::make('desc_color')
+                                                            ->label('Label / Subtext Color')
+                                                            ->helperText('Optional custom label color'),
+                                                        Components\ColorPicker::make('background_color')
+                                                            ->label('Custom Background Color')
+                                                            ->helperText('Optional custom hex color (e.g. #0B1528, #F8FAFC)'),
+                                                        Components\FileUpload::make('background_image')
+                                                            ->label('Background Image')
+                                                            ->image()
+                                                            ->disk('public')
+                                                            ->directory('pages/blocks/backgrounds')
+                                                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                                                            ->maxSize(10240)
+                                                            ->helperText('Optional background image or texture pattern'),
+                                                        Components\Select::make('line_height')
+                                                            ->label('Line Height / Leading')
+                                                            ->options([
+                                                                'tight' => 'Tight (1.25)',
+                                                                'snug' => 'Snug (1.375)',
+                                                                'normal' => 'Normal (1.5)',
+                                                                'relaxed' => 'Relaxed (1.625)',
+                                                                'loose' => 'Loose (2.0)',
+                                                            ])
+                                                            ->default('normal'),
                                                         Components\Repeater::make('stats')
                                                             ->label('Key Stat Counters')
+                                                            ->addActionLabel('Add Stat Counter')
                                                             ->schema([
                                                                 Components\TextInput::make('value')->label('Value (e.g. 860,000+)')->required(),
                                                                 Components\TextInput::make('label')->label('Label (e.g. Addressable Endpoints)')->required(),
                                                                 Components\TextInput::make('subtext')->label('Subtext (Optional)'),
-                                                            ])
+                                                             ])
                                                             ->columns(3)
                                                             ->collapsible()
                                                             ->reorderableWithButtons()
@@ -744,7 +893,7 @@ class PageResource extends Resource
                                                             ->columnSpanFull(),
                                                     ])->columns(2),
 
-                                                Components\Builder\Block::make('rich_text')
+                                                 Components\Builder\Block::make('rich_text')
                                                     ->label('Editorial / Rich Text Section')
                                                     ->icon('heroicon-o-document-text')
                                                     ->schema([
@@ -759,11 +908,46 @@ class PageResource extends Resource
                                                                 'two_column' => 'Two-Column Editorial',
                                                             ])
                                                             ->default('centered'),
+                                                        Components\Select::make('background_style')
+                                                            ->label('Background Tone')
+                                                            ->options([
+                                                                'surface' => 'Soft Surface (Light Slate)',
+                                                                'white' => 'Clean White',
+                                                                'navy' => 'Deep Navy',
+                                                            ])
+                                                            ->default('surface'),
+                                                        Components\ColorPicker::make('text_color')
+                                                            ->label('Heading Color')
+                                                            ->helperText('Optional custom heading color'),
+                                                        Components\ColorPicker::make('desc_color')
+                                                            ->label('Body Text Color')
+                                                            ->helperText('Optional custom body color'),
+                                                        Components\ColorPicker::make('background_color')
+                                                            ->label('Custom Background Color')
+                                                            ->helperText('Optional custom hex color (e.g. #0B1528, #F8FAFC)'),
+                                                        Components\FileUpload::make('background_image')
+                                                            ->label('Background Image')
+                                                            ->image()
+                                                            ->disk('public')
+                                                            ->directory('pages/blocks/backgrounds')
+                                                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                                                            ->maxSize(10240)
+                                                            ->helperText('Optional background image or texture pattern'),
+                                                        Components\Select::make('line_height')
+                                                            ->label('Line Height / Leading')
+                                                            ->options([
+                                                                'tight' => 'Tight (1.25)',
+                                                                'snug' => 'Snug (1.375)',
+                                                                'normal' => 'Normal (1.5)',
+                                                                'relaxed' => 'Relaxed (1.625)',
+                                                                'loose' => 'Loose (2.0)',
+                                                            ])
+                                                            ->default('normal'),
                                                         Components\Textarea::make('lead_paragraph')->label('Lead Paragraph')->rows(2)->columnSpanFull(),
                                                         Components\MarkdownEditor::make('content')->label('Body Content (Markdown Supported)')->columnSpanFull(),
                                                     ])->columns(2),
 
-                                                Components\Builder\Block::make('quote_highlight')
+                                                 Components\Builder\Block::make('quote_highlight')
                                                     ->label('Quote / Testimonial Highlight')
                                                     ->icon('heroicon-o-chat-bubble-bottom-center-text')
                                                     ->schema([
@@ -776,6 +960,33 @@ class PageResource extends Resource
                                                                 'white' => 'Clean White',
                                                             ])
                                                             ->default('surface'),
+                                                        Components\ColorPicker::make('text_color')
+                                                            ->label('Quote Text Color')
+                                                            ->helperText('Optional custom quote text color'),
+                                                        Components\ColorPicker::make('desc_color')
+                                                            ->label('Author / Role Color')
+                                                            ->helperText('Optional custom author text color'),
+                                                        Components\ColorPicker::make('background_color')
+                                                            ->label('Custom Background Color')
+                                                            ->helperText('Optional custom hex color (e.g. #0B1528, #F8FAFC)'),
+                                                        Components\FileUpload::make('background_image')
+                                                            ->label('Background Image')
+                                                            ->image()
+                                                            ->disk('public')
+                                                            ->directory('pages/blocks/backgrounds')
+                                                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                                                            ->maxSize(10240)
+                                                            ->helperText('Optional background image or texture pattern'),
+                                                        Components\Select::make('line_height')
+                                                            ->label('Line Height / Leading')
+                                                            ->options([
+                                                                'tight' => 'Tight (1.25)',
+                                                                'snug' => 'Snug (1.375)',
+                                                                'normal' => 'Normal (1.5)',
+                                                                'relaxed' => 'Relaxed (1.625)',
+                                                                'loose' => 'Loose (2.0)',
+                                                            ])
+                                                            ->default('normal'),
                                                         Components\Textarea::make('quote_text')
                                                             ->label('Quote Text')
                                                             ->rows(3)
@@ -786,14 +997,51 @@ class PageResource extends Resource
                                                         Components\TextInput::make('author_organization')->label('Organization / Utility'),
                                                     ])->columns(2),
 
-                                                Components\Builder\Block::make('logo_strip')
+                                                 Components\Builder\Block::make('logo_strip')
                                                     ->label('Partner / Trust Logo Strip')
                                                     ->icon('heroicon-o-photo')
                                                     ->schema([
                                                         Components\Toggle::make('is_visible')->label('Visible on Page')->default(true)->inline(false),
                                                         Components\TextInput::make('title')->label('Section Heading')->placeholder('Trusted by Utilities & Multilaterals'),
+                                                        Components\Select::make('background_style')
+                                                            ->label('Background Tone')
+                                                            ->options([
+                                                                'surface_muted' => 'Surface Muted (Light Gray)',
+                                                                'surface' => 'Soft Surface',
+                                                                'white' => 'Clean White',
+                                                                'navy' => 'Deep Navy',
+                                                            ])
+                                                            ->default('surface_muted'),
+                                                        Components\ColorPicker::make('text_color')
+                                                            ->label('Heading Color')
+                                                            ->helperText('Optional custom text color'),
+                                                        Components\ColorPicker::make('desc_color')
+                                                            ->label('Subtitle / Descriptor Color')
+                                                            ->helperText('Optional custom subtitle color'),
+                                                        Components\ColorPicker::make('background_color')
+                                                            ->label('Custom Background Color')
+                                                            ->helperText('Optional custom hex color (e.g. #0B1528, #F8FAFC)'),
+                                                        Components\FileUpload::make('background_image')
+                                                            ->label('Background Image')
+                                                            ->image()
+                                                            ->disk('public')
+                                                            ->directory('pages/blocks/backgrounds')
+                                                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                                                            ->maxSize(10240)
+                                                            ->helperText('Optional background image or texture pattern'),
+                                                        Components\Select::make('line_height')
+                                                            ->label('Line Height / Leading')
+                                                            ->options([
+                                                                'tight' => 'Tight (1.25)',
+                                                                'snug' => 'Snug (1.375)',
+                                                                'normal' => 'Normal (1.5)',
+                                                                'relaxed' => 'Relaxed (1.625)',
+                                                                'loose' => 'Loose (2.0)',
+                                                            ])
+                                                            ->default('normal'),
                                                         Components\Repeater::make('logos')
                                                             ->label('Logos')
+                                                            ->addActionLabel('Add Partner Logo')
                                                             ->schema([
                                                                 Components\TextInput::make('name')->label('Entity Name')->required(),
                                                                 Components\TextInput::make('subtitle')->label('Descriptor (Optional)'),
@@ -802,7 +1050,7 @@ class PageResource extends Resource
                                                                     ->disk('public')
                                                                     ->directory('pages/logos')
                                                                     ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp']),
-                                                            ])
+                                                             ])
                                                             ->columns(3)
                                                             ->collapsible()
                                                             ->reorderableWithButtons()
@@ -810,7 +1058,7 @@ class PageResource extends Resource
                                                             ->columnSpanFull(),
                                                     ])->columns(2),
 
-                                                Components\Builder\Block::make('cta_banner')
+                                                 Components\Builder\Block::make('cta_banner')
                                                     ->label('Call To Action (CTA Banner)')
                                                     ->icon('heroicon-o-arrow-right-circle')
                                                     ->schema([
@@ -822,8 +1070,42 @@ class PageResource extends Resource
                                                             ->options([
                                                                 'navy' => 'Deep Navy',
                                                                 'surface' => 'Soft Surface',
+                                                                'white' => 'Clean White',
                                                             ])
                                                             ->default('navy'),
+                                                        Components\ColorPicker::make('text_color')
+                                                            ->label('Heading / Title Color')
+                                                            ->helperText('Optional custom text color'),
+                                                        Components\ColorPicker::make('desc_color')
+                                                            ->label('Subtitle / Description Color')
+                                                            ->helperText('Optional custom description color'),
+                                                        Components\ColorPicker::make('background_color')
+                                                            ->label('Custom Background Color')
+                                                            ->helperText('Optional custom hex color (e.g. #0B1528, #F8FAFC)'),
+                                                        Components\FileUpload::make('background_image')
+                                                            ->label('Background Image')
+                                                            ->image()
+                                                            ->disk('public')
+                                                            ->directory('pages/blocks/backgrounds')
+                                                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                                                            ->maxSize(10240)
+                                                            ->helperText('Optional background image or texture pattern'),
+                                                        Components\Select::make('line_height')
+                                                            ->label('Line Height / Leading')
+                                                            ->options([
+                                                                'tight' => 'Tight (1.25)',
+                                                                'snug' => 'Snug (1.375)',
+                                                                'normal' => 'Normal (1.5)',
+                                                                'relaxed' => 'Relaxed (1.625)',
+                                                                'loose' => 'Loose (2.0)',
+                                                            ])
+                                                            ->default('normal'),
+                                                        Components\ColorPicker::make('btn_bg_color')
+                                                            ->label('Primary Button Background Color')
+                                                            ->helperText('Optional custom button background'),
+                                                        Components\ColorPicker::make('btn_text_color')
+                                                            ->label('Primary Button Text Color')
+                                                            ->helperText('Optional custom button text color'),
                                                         Components\Textarea::make('subtitle')->label('Subtitle / Description')->rows(2)->columnSpanFull(),
                                                         Components\TextInput::make('primary_btn_text')->label('Primary Button Text')->default('Get in touch'),
                                                         Components\TextInput::make('primary_btn_link')->label('Primary Button Link')->default('/contact'),
@@ -831,19 +1113,55 @@ class PageResource extends Resource
                                                         Components\TextInput::make('secondary_btn_link')->label('Secondary Button Link (Optional)'),
                                                     ])->columns(2),
 
-                                                Components\Builder\Block::make('faq_accordion')
+                                                 Components\Builder\Block::make('faq_accordion')
                                                     ->label('FAQ Accordion Block')
                                                     ->icon('heroicon-o-question-mark-circle')
                                                     ->schema([
                                                         Components\Toggle::make('is_visible')->label('Visible on Page')->default(true)->inline(false),
                                                         Components\TextInput::make('eyebrow')->label('Eyebrow')->placeholder('FAQ'),
                                                         Components\TextInput::make('heading')->label('Heading')->default('Frequently Asked Questions'),
+                                                        Components\Select::make('background_style')
+                                                            ->label('Background Tone')
+                                                            ->options([
+                                                                'surface' => 'Soft Surface (Light)',
+                                                                'white' => 'Clean White',
+                                                                'navy' => 'Deep Navy',
+                                                            ])
+                                                            ->default('surface'),
+                                                        Components\ColorPicker::make('text_color')
+                                                            ->label('Heading / Question Color')
+                                                            ->helperText('Optional custom text color'),
+                                                        Components\ColorPicker::make('desc_color')
+                                                            ->label('Answer / Subtitle Color')
+                                                            ->helperText('Optional custom answer text color'),
+                                                        Components\ColorPicker::make('background_color')
+                                                            ->label('Custom Background Color')
+                                                            ->helperText('Optional custom hex color (e.g. #0B1528, #F8FAFC)'),
+                                                        Components\FileUpload::make('background_image')
+                                                            ->label('Background Image')
+                                                            ->image()
+                                                            ->disk('public')
+                                                            ->directory('pages/blocks/backgrounds')
+                                                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                                                            ->maxSize(10240)
+                                                            ->helperText('Optional background image or texture pattern'),
+                                                        Components\Select::make('line_height')
+                                                            ->label('Line Height / Leading')
+                                                            ->options([
+                                                                'tight' => 'Tight (1.25)',
+                                                                'snug' => 'Snug (1.375)',
+                                                                'normal' => 'Normal (1.5)',
+                                                                'relaxed' => 'Relaxed (1.625)',
+                                                                'loose' => 'Loose (2.0)',
+                                                            ])
+                                                            ->default('normal'),
                                                         Components\Textarea::make('subtitle')->label('Subtitle')->rows(2),
                                                         Components\Repeater::make('faqs')
                                                             ->label('Questions & Answers')
+                                                            ->addActionLabel('Add Question & Answer')
                                                             ->schema([
                                                                 Components\TextInput::make('question')->label('Question')->required(),
-                                                                Components\Textarea::make('answer')->label('Answer')->rows(3)->required(),
+                                                        Components\Textarea::make('answer')->label('Answer')->rows(3)->required(),
                                                             ])
                                                             ->columns(2)
                                                             ->collapsible()
@@ -865,6 +1183,9 @@ class PageResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('No website pages found')
+            ->emptyStateDescription('Create a new page layout or duplicate an existing template.')
+            ->emptyStateIcon('heroicon-o-document-duplicate')
             ->columns([
                 Tables\Columns\TextColumn::make('title')
                     ->label('Page Title')
@@ -881,9 +1202,11 @@ class PageResource extends Resource
                     ->badge()
                     ->color('info')
                     ->sortable(),
-                Tables\Columns\IconColumn::make('is_published')
-                    ->label('Live')
-                    ->boolean()
+                Tables\Columns\TextColumn::make('is_published')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (bool $state): string => $state ? 'success' : 'gray')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Published' : 'Draft')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Last Modified')
@@ -931,6 +1254,12 @@ class PageResource extends Resource
                         $clone->slug = $data['new_slug'];
                         $clone->save();
                     }),
+                Action::make('view_live')
+                    ->label('View')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->color('gray')
+                    ->url(fn (Page $record): string => rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/') . ($record->slug === '/' ? '' : '/' . ltrim($record->slug, '/')))
+                    ->openUrlInNewTab(),
                 DeleteAction::make(),
             ])
             ->bulkActions([
@@ -1005,6 +1334,116 @@ class PageResource extends Resource
                 ['key' => 'cta', 'label' => 'Bottom Call To Action (CTA) Banner', 'is_enabled' => true],
             ],
         };
+    }
+
+    public static function makeSectionStylingAction(string $prefix, string $title): Action
+    {
+        return Action::make("{$prefix}_styling")
+            ->label('Styling')
+            ->icon('heroicon-o-cog-6-tooth')
+            ->iconButton()
+            ->color('gray')
+            ->tooltip('Block Styling, Colors & Line Height')
+            ->modalHeading("{$title} — Styling & Colors")
+            ->modalDescription('Configure custom colors, typography leading, and button accents for this block.')
+            ->modalSubmitActionLabel('Save Styling')
+            ->modalWidth('2xl')
+            ->form([
+                Fieldset::make('Background & Canvas')
+                    ->schema([
+                        Components\ColorPicker::make('bg_color')
+                            ->label('Background Color')
+                            ->helperText('Custom block background color (e.g. #0B1528, #F8FAFC)'),
+                        Components\FileUpload::make('bg_image')
+                            ->label('Background Image / Pattern')
+                            ->image()
+                            ->disk('public')
+                            ->directory('pages/sections/backgrounds')
+                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                            ->maxSize(10240)
+                            ->helperText('Optional background texture pattern or photo'),
+                    ])->columns(2),
+
+                Fieldset::make('Typography & Text Colors')
+                    ->schema([
+                        Components\ColorPicker::make('text_color')
+                            ->label('Headline / Title Color')
+                            ->helperText('Primary color for headlines and titles (e.g. #0B1528, #FFFFFF)'),
+                        Components\ColorPicker::make('desc_color')
+                            ->label('Description / Subtitle Color')
+                            ->helperText('Secondary color for paragraphs and subtitles (e.g. #64748B, #94A3B8)'),
+                        Components\Select::make('line_height')
+                            ->label('Line Height / Typography Leading')
+                            ->options([
+                                'tight' => 'Tight (1.25)',
+                                'snug' => 'Snug (1.375)',
+                                'normal' => 'Normal (1.5)',
+                                'relaxed' => 'Relaxed (1.625)',
+                                'loose' => 'Loose (2.0)',
+                            ])
+                            ->default('normal')
+                            ->helperText('Controls paragraph and body line spacing'),
+                    ])->columns(3),
+
+                Fieldset::make('Button & Action Styling')
+                    ->schema([
+                        Components\ColorPicker::make('btn_bg_color')
+                            ->label('Button Background Color')
+                            ->helperText('Custom background for CTA buttons (e.g. #0D9488, #2563EB)'),
+                        Components\ColorPicker::make('btn_text_color')
+                            ->label('Button Text Color')
+                            ->helperText('Custom text / icon color for CTA buttons (e.g. #FFFFFF, #0F172A)'),
+                    ])->columns(2),
+            ])
+            ->fillForm(fn ($get, $livewire) => [
+                'bg_color' => $get("content.{$prefix}_bg_color") ?? ($livewire->data['content']["{$prefix}_bg_color"] ?? null),
+                'bg_image' => $get("content.{$prefix}_bg_image") ?? ($livewire->data['content']["{$prefix}_bg_image"] ?? null),
+                'text_color' => $get("content.{$prefix}_text_color") ?? ($livewire->data['content']["{$prefix}_text_color"] ?? null),
+                'desc_color' => $get("content.{$prefix}_desc_color") ?? ($livewire->data['content']["{$prefix}_desc_color"] ?? null),
+                'line_height' => $get("content.{$prefix}_line_height") ?? ($livewire->data['content']["{$prefix}_line_height"] ?? 'normal'),
+                'btn_bg_color' => $get("content.{$prefix}_btn_bg_color") ?? ($livewire->data['content']["{$prefix}_btn_bg_color"] ?? null),
+                'btn_text_color' => $get("content.{$prefix}_btn_text_color") ?? ($livewire->data['content']["{$prefix}_btn_text_color"] ?? null),
+            ])
+            ->action(function (array $data, $set, $livewire) use ($prefix) {
+                $bgColor = $data['bg_color'] ?? null;
+                $bgImage = $data['bg_image'] ?? null;
+                $textColor = $data['text_color'] ?? null;
+                $descColor = $data['desc_color'] ?? null;
+                $lineHeight = $data['line_height'] ?? 'normal';
+                $btnBgColor = $data['btn_bg_color'] ?? null;
+                $btnTextColor = $data['btn_text_color'] ?? null;
+
+                $set("content.{$prefix}_bg_color", $bgColor);
+                $set("content.{$prefix}_bg_image", $bgImage);
+                $set("content.{$prefix}_text_color", $textColor);
+                $set("content.{$prefix}_desc_color", $descColor);
+                $set("content.{$prefix}_line_height", $lineHeight);
+                $set("content.{$prefix}_btn_bg_color", $btnBgColor);
+                $set("content.{$prefix}_btn_text_color", $btnTextColor);
+
+                if (isset($livewire->data['content'])) {
+                    $livewire->data['content']["{$prefix}_bg_color"] = $bgColor;
+                    $livewire->data['content']["{$prefix}_bg_image"] = $bgImage;
+                    $livewire->data['content']["{$prefix}_text_color"] = $textColor;
+                    $livewire->data['content']["{$prefix}_desc_color"] = $descColor;
+                    $livewire->data['content']["{$prefix}_line_height"] = $lineHeight;
+                    $livewire->data['content']["{$prefix}_btn_bg_color"] = $btnBgColor;
+                    $livewire->data['content']["{$prefix}_btn_text_color"] = $btnTextColor;
+                }
+            });
+    }
+
+    public static function getSectionStylingHiddenFields(string $prefix): array
+    {
+        return [
+            Components\Hidden::make("content.{$prefix}_bg_color"),
+            Components\Hidden::make("content.{$prefix}_bg_image"),
+            Components\Hidden::make("content.{$prefix}_text_color"),
+            Components\Hidden::make("content.{$prefix}_desc_color"),
+            Components\Hidden::make("content.{$prefix}_line_height")->default('normal'),
+            Components\Hidden::make("content.{$prefix}_btn_bg_color"),
+            Components\Hidden::make("content.{$prefix}_btn_text_color"),
+        ];
     }
 
     public static function getPages(): array

@@ -20,9 +20,9 @@ class SiteSettingResource extends Resource
 {
     protected static ?string $model = SiteSetting::class;
 
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-adjustments-horizontal';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Website & Navigation';
+    protected static string | UnitEnum | null $navigationGroup = 'Website & Branding';
 
     protected static ?string $navigationLabel = 'Website Settings';
 
@@ -32,67 +32,70 @@ class SiteSettingResource extends Resource
     {
         return $schema
             ->components([
-                // 1. Main Site & Global Settings Layout
-                Section::make()
+                // 1. Main Site & Global Settings Layout (Vertical Left Menu Tabs)
+                Tabs::make('SettingsTabs')
+                    ->extraAttributes(['class' => 'vertical-section-tabs'])
+                    ->contained(false)
                     ->visible(fn ($record) => $record?->key === 'general')
-                    ->schema([
-                        Tabs::make('SettingsTabs')
-                            ->extraAttributes(['class' => 'settings-pill-tabs'])
-                            ->tabs([
-                                // Tab 1: Branding
-                                Tabs\Tab::make('Branding')
-                                    ->icon('heroicon-o-paint-brush')
-                                    ->schema([
-                                        self::getBrandingSection(),
-                                    ]),
+                    ->tabs([
+                        // Tab 1: Branding
+                        Tabs\Tab::make('Branding')
+                            ->icon('heroicon-o-paint-brush')
+                            ->schema([
+                                self::getBrandingSection(),
+                            ]),
 
-                                // Tab 2: Site Info
-                                Tabs\Tab::make('Site Info')
-                                    ->icon('heroicon-o-building-office-2')
-                                    ->schema([
-                                        self::getSiteInfoSection(),
-                                    ]),
+                        // Tab 2: Site Info
+                        Tabs\Tab::make('Site Info')
+                            ->icon('heroicon-o-building-office-2')
+                            ->schema([
+                                self::getSiteInfoSection(),
+                            ]),
 
-                                // Tab 3: Social Links
-                                Tabs\Tab::make('Social Links')
-                                    ->icon('heroicon-o-share')
-                                    ->schema([
-                                        self::getSocialLinksSection(),
-                                    ]),
+                        // Tab 3: Social Links
+                        Tabs\Tab::make('Social Links')
+                            ->icon('heroicon-o-share')
+                            ->schema([
+                                self::getSocialLinksSection(),
+                            ]),
 
-                                // Tab 4: SEO & Meta
-                                Tabs\Tab::make('SEO & Meta')
-                                    ->icon('heroicon-o-magnifying-glass')
-                                    ->schema([
-                                        self::getSeoSection(),
-                                    ]),
+                        // Tab 4: SEO & Meta
+                        Tabs\Tab::make('SEO & Meta')
+                            ->icon('heroicon-o-magnifying-glass')
+                            ->schema([
+                                self::getSeoSection(),
+                            ]),
 
-                                // Tab 5: AEO & AI Search
-                                Tabs\Tab::make('AEO & AI Search')
-                                    ->icon('heroicon-o-sparkles')
-                                    ->schema([
-                                        self::getAeoSection(),
-                                    ]),
+                        // Tab 5: AEO & AI Search
+                        Tabs\Tab::make('AEO & AI Search')
+                            ->icon('heroicon-o-sparkles')
+                            ->schema([
+                                self::getAeoSection(),
+                            ]),
 
-                                // Tab 6: Google Tag
-                                Tabs\Tab::make('Google Tag')
-                                    ->icon('heroicon-o-tag')
-                                    ->schema([
-                                        self::getAnalyticsSection(),
-                                    ]),
-                            ])
-                            ->columnSpanFull(),
-                    ]),
+                        // Tab 6: Google Tag
+                        Tabs\Tab::make('Google Tag')
+                            ->icon('heroicon-o-tag')
+                            ->schema([
+                                self::getAnalyticsSection(),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
 
                 // 3. Top Navigation Header Settings
                 Section::make('Top Navigation Header & Menu Architecture')
-                    ->description('Manage primary logo text, CTA button, and multi-level header menu items.')
+                    ->description('Manage primary logo text, CTA button, styling, and multi-level header menu items.')
                     ->visible(fn ($record) => $record?->key === 'header')
                     ->schema([
                         Components\TextInput::make('payload.logo_text')
                             ->label('Brand Logo Text')
                             ->default('N3 Solutions Limited')
                             ->required(),
+                        Components\ColorPicker::make('payload.bg_color')
+                            ->label('Header Background Color')
+                            ->helperText('Custom background color for the top navigation bar (e.g. #FFFFFF).'),
+                        Components\ColorPicker::make('payload.text_color')
+                            ->label('Header Text Color'),
                         Components\Toggle::make('payload.show_cta_button')
                             ->label('Display "Talk to us" Action Button in Header')
                             ->default(true)
@@ -103,9 +106,14 @@ class SiteSettingResource extends Resource
                         Components\TextInput::make('payload.cta_button_link')
                             ->label('Header Button Link Destination')
                             ->default('/contact'),
+                        Components\ColorPicker::make('payload.btn_bg_color')
+                            ->label('Header Button Background Color'),
+                        Components\ColorPicker::make('payload.btn_text_color')
+                            ->label('Header Button Text Color'),
 
                         Components\Repeater::make('payload.menu_items')
                             ->label('Header Navigation Menu Architecture')
+                            ->addActionLabel('Add Menu Item')
                             ->schema([
                                 Components\TextInput::make('label')->label('Menu Item Label')->required(),
                                 Components\TextInput::make('url')->label('Destination URL / Route')->required(),
@@ -119,6 +127,7 @@ class SiteSettingResource extends Resource
                                     ->reactive(),
                                 Components\Repeater::make('children')
                                     ->label('Dropdown Sub-Items')
+                                    ->addActionLabel('Add Sub-Item')
                                     ->visible(fn ($get) => $get('type') === 'dropdown')
                                     ->schema([
                                         Components\TextInput::make('label')->label('Sub-Item Title')->required(),
@@ -137,9 +146,15 @@ class SiteSettingResource extends Resource
 
                 // 4. Footer Configuration Settings
                 Section::make('Footer Architecture & Legal Notice')
-                    ->description('Configure footer mission copy, office contact channels, navigation columns, and legal text.')
+                    ->description('Configure footer mission copy, office contact channels, navigation columns, and styling.')
                     ->visible(fn ($record) => $record?->key === 'footer')
                     ->schema([
+                        Components\ColorPicker::make('payload.bg_color')
+                            ->label('Footer Background Color')
+                            ->helperText('Custom background color for the footer section (e.g. #091224).'),
+                        Components\ColorPicker::make('payload.text_color')
+                            ->label('Footer Text Color')
+                            ->helperText('Custom text color for footer content.'),
                         Components\Textarea::make('payload.tagline')
                             ->label('Footer Tagline / Mission Statement')
                             ->rows(2)
@@ -157,10 +172,12 @@ class SiteSettingResource extends Resource
 
                         Components\Repeater::make('payload.columns')
                             ->label('Footer Multi-Column Link Directories')
+                            ->addActionLabel('Add Column')
                             ->schema([
                                 Components\TextInput::make('title')->label('Column Heading (e.g. Company, Solutions, Resources)')->required(),
                                 Components\Repeater::make('links')
                                     ->label('Column Links')
+                                    ->addActionLabel('Add Link')
                                     ->schema([
                                         Components\TextInput::make('label')->label('Link Label')->required(),
                                         Components\TextInput::make('url')->label('Target URL')->required(),
@@ -187,7 +204,8 @@ class SiteSettingResource extends Resource
                 Components\FileUpload::make('payload.logo')
                     ->label('Logo (Light Mode)  —  [PNG / SVG / WEBP]')
                     ->helperText('Main brand mark used on white or light backgrounds across navigation headers and sidebars.')
-                    ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'])
+                    ->image()
+                    ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp', 'image/gif'])
                     ->disk('public')
                     ->directory('settings')
                     ->visibility('public')
@@ -197,7 +215,8 @@ class SiteSettingResource extends Resource
                 Components\FileUpload::make('payload.logo_dark')
                     ->label('Logo (Dark Mode)  —  [PNG / SVG / WEBP]')
                     ->helperText('Alternative brand mark used for dark backgrounds, footer banners, or dark theme views.')
-                    ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'])
+                    ->image()
+                    ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp', 'image/gif'])
                     ->disk('public')
                     ->directory('settings')
                     ->visibility('public')
@@ -211,7 +230,37 @@ class SiteSettingResource extends Resource
                     ->directory('settings')
                     ->visibility('public')
                     ->maxSize(2048)
-                    ->acceptedFileTypes(['image/x-icon', 'image/vnd.microsoft.icon', 'image/png', 'image/svg+xml', 'image/svg', 'image/jpeg', 'image/webp'])
+                    ->acceptedFileTypes(['image/x-icon', 'image/vnd.microsoft.icon', 'image/png', 'image/svg+xml', 'image/jpeg', 'image/webp'])
+                    ->columnSpan(1),
+
+                Components\TextInput::make('payload.logo_width')
+                    ->label('Logo Width (px)')
+                    ->numeric()
+                    ->minValue(20)
+                    ->maxValue(800)
+                    ->suffix('px')
+                    ->placeholder('e.g. 160 (or blank for auto)')
+                    ->helperText('Custom display width in pixels. Leave empty for automatic width calculation.')
+                    ->columnSpan(1),
+
+                Components\TextInput::make('payload.logo_height')
+                    ->label('Logo Height (px)')
+                    ->numeric()
+                    ->minValue(16)
+                    ->maxValue(300)
+                    ->suffix('px')
+                    ->placeholder('e.g. 36 (default: 32px)')
+                    ->helperText('Custom display height in pixels. Default is 32px.')
+                    ->columnSpan(1),
+
+                Components\ColorPicker::make('payload.header_bg_color')
+                    ->label('Header Background Color (Global)')
+                    ->helperText('Default background color for the navigation header.')
+                    ->columnSpan(1),
+
+                Components\ColorPicker::make('payload.footer_bg_color')
+                    ->label('Footer Background Color (Global)')
+                    ->helperText('Default background color for the website footer.')
                     ->columnSpan(1),
             ])
             ->columns(3);
@@ -297,6 +346,7 @@ class SiteSettingResource extends Resource
                     ->columnSpanFull(),
                 Components\FileUpload::make('payload.default_seo.og_image')
                     ->label('Default Social Share Card (OG Image)  —  [1200x630px]')
+                    ->image()
                     ->disk('public')
                     ->directory('settings')
                     ->visibility('public')
@@ -350,6 +400,9 @@ class SiteSettingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('No configuration areas found')
+            ->emptyStateDescription('System website settings will initialize on startup.')
+            ->emptyStateIcon('heroicon-o-adjustments-horizontal')
             ->columns([
                 Tables\Columns\TextColumn::make('key')
                     ->label('Configuration Area')

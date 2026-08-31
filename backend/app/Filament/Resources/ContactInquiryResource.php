@@ -95,6 +95,9 @@ class ContactInquiryResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('No contact inquiries yet')
+            ->emptyStateDescription('Inbound messages and utility inquiries submitted from the website will appear here in real time.')
+            ->emptyStateIcon('heroicon-o-inbox-arrow-down')
             ->columns([
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
@@ -105,6 +108,13 @@ class ContactInquiryResource extends Resource
                         'replied' => 'success',
                         'archived' => 'gray',
                         default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'new' => 'New',
+                        'read' => 'Read',
+                        'replied' => 'Replied',
+                        'archived' => 'Archived',
+                        default => ucfirst($state),
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('name')

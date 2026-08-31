@@ -64,12 +64,13 @@ class NewsPostResource extends Resource
                             ->columnSpanFull(),
                         Components\FileUpload::make('featured_image')
                             ->label('Featured Article Image')
-                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
+                            ->image()
+                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
                             ->disk('public')
                             ->directory('news')
                             ->visibility('public')
                             ->maxSize(8192)
-                            ->helperText('Upload JPG, PNG or WEBP (Max 8MB).'),
+                            ->helperText('Recommended 16:9 landscape image (e.g. 1200x675px, Max 8MB).'),
                         Components\TextInput::make('external_link')
                             ->label('External Press Release Link')
                             ->url()
@@ -84,6 +85,9 @@ class NewsPostResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('No news articles found')
+            ->emptyStateDescription('Publish your first technical insight or infrastructure announcement.')
+            ->emptyStateIcon('heroicon-o-newspaper')
             ->columns([
                 Tables\Columns\ImageColumn::make('featured_image')
                     ->label('Thumbnail')
@@ -95,11 +99,13 @@ class NewsPostResource extends Resource
                     ->sortable()
                     ->weight('bold'),
                 Tables\Columns\TextColumn::make('published_date_text')
-                    ->label('Date')
+                    ->label('Display Date')
                     ->searchable(),
-                Tables\Columns\IconColumn::make('is_published')
-                    ->label('Live')
-                    ->boolean()
+                Tables\Columns\TextColumn::make('is_published')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (bool $state): string => $state ? 'success' : 'gray')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Published' : 'Draft')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('published_at')
                     ->label('Published At')

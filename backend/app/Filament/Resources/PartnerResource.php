@@ -53,7 +53,8 @@ class PartnerResource extends Resource
                             ->columnSpanFull(),
                         Components\FileUpload::make('logo')
                             ->label('Custom Logo Upload (SVG, PNG or JPG)')
-                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'])
+                            ->image()
+                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp', 'image/gif'])
                             ->disk('public')
                             ->directory('partners')
                             ->visibility('public')
@@ -84,6 +85,9 @@ class PartnerResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('No ecosystem partners found')
+            ->emptyStateDescription('Add utility authorities, metrology OEMs, telecom providers, or development banks.')
+            ->emptyStateIcon('heroicon-o-building-office-2')
             ->columns([
                 Tables\Columns\ImageColumn::make('logo')
                     ->label('Logo')
@@ -100,7 +104,7 @@ class PartnerResource extends Resource
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'utility_authority' => 'info',
-                        'metrology_oem' => 'success',
+                        'metrology_oem' => 'teal',
                         'telecom_iot' => 'warning',
                         'multilateral_institution' => 'primary',
                         default => 'gray',
@@ -115,12 +119,16 @@ class PartnerResource extends Resource
                 Tables\Columns\TextColumn::make('collaboration_detail')
                     ->label('Scope')
                     ->limit(40),
-                Tables\Columns\IconColumn::make('is_featured')
+                Tables\Columns\TextColumn::make('is_featured')
                     ->label('Featured')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('is_active')
-                    ->label('Active')
-                    ->boolean(),
+                    ->badge()
+                    ->color(fn (bool $state): string => $state ? 'teal' : 'gray')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Featured' : 'Standard'),
+                Tables\Columns\TextColumn::make('is_active')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (bool $state): string => $state ? 'success' : 'gray')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive'),
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label('Order')
                     ->sortable(),

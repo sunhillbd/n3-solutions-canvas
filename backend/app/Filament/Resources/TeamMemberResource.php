@@ -59,13 +59,14 @@ class TeamMemberResource extends Resource
                             ->maxLength(5),
                         Components\FileUpload::make('photo')
                             ->label('Profile Photo')
-                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
+                            ->image()
+                            ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
                             ->disk('public')
                             ->directory('team')
                             ->visibility('public')
                             ->maxSize(5120)
                             ->imageCropAspectRatio('1:1')
-                            ->helperText('Upload JPG, PNG or WEBP (Max 5MB). If left empty, stylized initials will be displayed.'),
+                            ->helperText('Recommended 1:1 square photo (Max 5MB). If left empty, stylized initials will be displayed.'),
                         Components\Textarea::make('bio')
                             ->label('Professional Bio / Scope')
                             ->rows(3)
@@ -91,6 +92,9 @@ class TeamMemberResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('No team members found')
+            ->emptyStateDescription('Add leadership partners and functional discipline leads.')
+            ->emptyStateIcon('heroicon-o-user-group')
             ->columns([
                 Tables\Columns\ImageColumn::make('photo')
                     ->label('Photo')
@@ -109,16 +113,24 @@ class TeamMemberResource extends Resource
                     ->label('Category')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'executive' => 'primary',
+                        'executive' => 'teal',
                         'functional_lead' => 'info',
                         default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'executive' => 'Executive Leadership',
+                        'functional_lead' => 'Functional Lead',
+                        'advisor' => 'Technical Advisor',
+                        default => ucfirst($state),
                     }),
                 Tables\Columns\IconColumn::make('show_on_home')
                     ->label('Homepage')
                     ->boolean(),
-                Tables\Columns\IconColumn::make('is_active')
-                    ->label('Active')
-                    ->boolean(),
+                Tables\Columns\TextColumn::make('is_active')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (bool $state): string => $state ? 'success' : 'gray')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive'),
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label('Order')
                     ->sortable(),
